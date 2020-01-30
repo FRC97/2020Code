@@ -7,15 +7,17 @@
 
 package frc.robot.commands;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-
 import edu.wpi.first.wpilibj.command.Command;
-import frc.robot.subsystems.JoystickController;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.JoystickController;
 
 public class ArcadeDrive extends Command {
+  public DriveTrain m_DriveTrain = new DriveTrain();
+
   public ArcadeDrive() {
     // Use requires() here to declare subsystem dependencies
+    requires(m_DriveTrain);
   }
 
   // Called just before this Command runs the first time
@@ -23,24 +25,45 @@ public class ArcadeDrive extends Command {
   protected void initialize() {
   }
 
+  double Rotation;
+
+  public boolean calcRotateVal(double targetAngle, Gyro gyro) {
+    double error = targetAngle - gyro.getAngle();
+    if (error > 2) {
+      this.Rotation = error * 0.5;
+      return false;
+    } else {
+      this.Rotation = 0;
+      return true;
+    }
+  }
+
+  public double getAngle(double x, double y) {
+    return Math.atan(x/y)/Math.PI;
+  }
+
   // Called repeatedly when this Command is scheduled to run
   @Override
   public void execute() {
-    DriveTrain.front_Left.set(ControlMode.PercentOutput, constrain(JoystickController.Y_Value + JoystickController.X_Value));
-    DriveTrain.back_Left.set(ControlMode.PercentOutput, constrain(JoystickController.Y_Value + JoystickController.X_Value));
-    DriveTrain.front_Right.set(ControlMode.PercentOutput, constrain(JoystickController.Y_Value - JoystickController.X_Value));
-    DriveTrain.back_Right.set(ControlMode.PercentOutput, -1*constrain(JoystickController.Y_Value - JoystickController.X_Value));
-   
+
+    DriveTrain.m_Drive.arcadeDrive(constrain(JoystickController.Y_Value), 
+      getAngle(JoystickController.X_Value, JoystickController.Y_Value));
   }
 
   private double constrain(double num) {
+
+    double joy = JoystickController.slider / 2;
+
     if (num > 1) {
       num = 1; 
     }
     else if (num < -1) {
       num = -1;
     }
-    return num;
+
+    double val = num * joy;
+
+    return val;
   }
 
   // Make this return true when this Command no longer needs to run execute()
@@ -52,10 +75,8 @@ public class ArcadeDrive extends Command {
   // Called once after isFinished returns true
   @Override
   protected void end() {
-    DriveTrain.front_Left.set(ControlMode.PercentOutput, 0);
-    DriveTrain.back_Left.set(ControlMode.PercentOutput, 0);
-    DriveTrain.front_Right.set(ControlMode.PercentOutput, 0);
-    DriveTrain.back_Right.set(ControlMode.PercentOutput, 0);
+
+    DriveTrain.m_Drive.arcadeDrive(0, 0);
 
   }
 
