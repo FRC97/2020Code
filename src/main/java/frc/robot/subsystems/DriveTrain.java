@@ -25,7 +25,7 @@ public class DriveTrain extends Subsystem {
   static SpeedControllerGroup m_Right = new SpeedControllerGroup(back_Right, front_Right);
   static SpeedControllerGroup m_Left = new SpeedControllerGroup(back_Left, front_Left);
   public static DifferentialDrive m_drive = new DifferentialDrive(m_Left,m_Right);
-  private PIDController pid = new PIDController(0.8, 0.2, 0.1);
+  //private PIDController pid = new PIDController(0.8, 0.2, 0.1);
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
 
