@@ -17,11 +17,10 @@ public class RobotMap {
     public static final int BR = 3;
     public static final int test = 10;
 
-<<<<<<< Updated upstream
+
     //private static final int DriveController = 0;
     //private static final int m_stick = 0;
-}
-=======
+
 	public static final int front_Left_ID = 2;
 	public static final int back_Left_ID = 4;
 	public static final int front_Right_ID = 1;//6
@@ -35,4 +34,3 @@ public class RobotMap {
 	public static final int gatherer_ID = 9;
 	public static final int indexer_ID = 10;
 }
->>>>>>> Stashed changes
