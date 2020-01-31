@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import edu.wpi.first.wpilibj.command.Scheduler;
 //import frc.robot.commands.ArcadeDrive;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.PID_Drive;
 //import frc.robot.subsystems.JoystickController;
 //import frc.robot.subsystems.PID_Drive;
 import frc.robot.subsystems.Shooter;
@@ -53,23 +54,23 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
-  private WPI_VictorSPX FR = new WPI_VictorSPX(RobotMap.FR);
-  private WPI_VictorSPX FL = new WPI_VictorSPX(RobotMap.FL);
+  //private WPI_VictorSPX FR = new WPI_VictorSPX(RobotMap.FR);
+  //private WPI_VictorSPX FL = new WPI_VictorSPX(RobotMap.FL);
   private CANSparkMax testMotor = new CANSparkMax(10, MotorType.kBrushless);;
   //private WPI_TalonSRX TestController = new WPI_TalonSRX(0);
-  private WPI_TalonSRX BR = new WPI_TalonSRX(RobotMap.BR);
-  private WPI_TalonSRX BL = new WPI_TalonSRX(RobotMap.BL);
+  //private WPI_TalonSRX BR = new WPI_TalonSRX(RobotMap.BR);
+  //private WPI_TalonSRX BL = new WPI_TalonSRX(RobotMap.BL);
 
   private Joystick joy = new Joystick(0);
+  private PID_Drive pid = new PID_Drive(0.8,0.05,0.05);
+ // private SpeedControllerGroup right;
+ // private SpeedControllerGroup left;
 
-  private SpeedControllerGroup right;
-  private SpeedControllerGroup left;
-
-  private DifferentialDrive Drive;
+//  private DifferentialDrive Drive;
 
   @Override
   public void robotInit() {
-    // Inverted settings
+    /*// Inverted settings
     FR.setInverted(false);
     BR.setInverted(false);
     FL.setInverted(true);
@@ -83,7 +84,7 @@ public class Robot extends TimedRobot {
     Drive.setDeadband(0.05);
 
     // init encocder
-
+    */
     /*
     RightMaster.setSensorPhase(true);
     RightMaster.setSensorPhase(false);
@@ -116,16 +117,36 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    double speed = -contrain(joy.getRawAxis(1));
-    double turn = contrain(joy.getRawAxis(0));
+    //double speed = -contrain(joy.getRawAxis(1));
+    //double turn = contrain(joy.getRawAxis(0));
+    pid.executeTurn(joy.getY(),constrain(getAngle(joy.getX(),joy.getY())));
+    if(joy.getRawButtonPressed(9)){
+      pid.addValues(0.05, 0, 0);
+    }
+    if(joy.getRawButtonPressed(10)){
+      pid.addValues(-0.05, 0, 0);
+    }
+    if(joy.getRawButtonPressed(7)){
+      pid.addValues(0, 0.05, 0);
+    }
+    if(joy.getRawButtonPressed(8)){
+      pid.addValues(0, -0.05, 0);
+    }
+    if(joy.getRawButtonPressed(6)){
+      pid.addValues(0, 0, 0.05);
+    }
+    if(joy.getRawButtonPressed(5)){
+      pid.addValues(0, 0, -0.05);
+    }
     
-    Drive.arcadeDrive(speed, turn);
-    testMotor.set(speed);
+    //Drive.arcadeDrive(speed, turn);
+    
+    //testMotor.set(speed);
     //Scheduler.getInstance().run();
     //piddrive.setSetpoint(getAngle(m_stick.getX(),m_stick.getY()));
     //DriveTrain.m_drive.arcadeDrive(m_stick.getY()-0.1,constrain(getAngle(m_stick.getX(),m_stick.getY())));
     //piddrive.execute(m_stick.getY()-0.1);
-    shooter.shoot(joy.getRawButtonPressed(0));
+    //shooter.shoot(joy.getRawButtonPressed(0));
     /*
     if (m_stick.getX() < 0.1 && m_stick.getX() > -0.1) {
       x_value = 0;
@@ -146,7 +167,7 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
   }
-  private double contrain(double value){
+  private double constrain(double value){
     if (value > 1){
       return 1;
     }
@@ -156,5 +177,8 @@ public class Robot extends TimedRobot {
     else{
       return value;
     }
+  }
+  public double getAngle(double x, double y){
+    return Math.atan(x/y)/Math.PI;
   }
 }

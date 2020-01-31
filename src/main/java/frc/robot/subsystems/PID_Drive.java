@@ -10,9 +10,12 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.controller.PIDController;
 
 import com.fasterxml.jackson.annotation.JacksonInject.Value;
+import com.revrobotics.*;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.command.PIDSubsystem;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;;
 /**
@@ -27,31 +30,37 @@ public class PID_Drive extends PIDSubsystem {
   double speed;
     double P, I, D = 1;
     double integral, previous_error, setpoint = 0;
-    Gyro gyro;
+    CANSparkMax can = new CANSparkMax(10, MotorType.kBrushless);
     double derivative;
     double error;
     DifferentialDrive robotDrive;
     double rcw;
 
 
-    public PID_Drive(double P, double I, double D, Gyro gyro){
+    public PID_Drive(double P, double I, double D){
         
       super("SubsystemName", P, I, D);  
       this.P = P;
       this.I = I;
       this.D = D;
-      this.gyro = gyro;
+      //this.gyro = gyro;
     }
   
     public void setSetpoint(double setpoint)
     {
         this.setpoint = setpoint;
     }
+    public void addValues(double P, double I, double D)
+    {
+        this.P += P;
+        this.I += I;
+        this.D += D;
+    }
     //public double linear_Error()
 
     public void PID(){
-        error = setpoint - gyro.getAngle(); // Error = Target - Actual
-        if (error> setpoint*0.005){
+        error = setpoint - can.get(); // Error = Target - Actual
+        if (error> setpoint*0.003){
           this.integral += (error*.02); // Integral is increased by the error*time (which is .02 seconds using normal IterativeRobot)
           derivative = (error - this.previous_error) / .02;
           this.rcw = P*error + I*this.integral + D*derivative;
@@ -60,9 +69,12 @@ public class PID_Drive extends PIDSubsystem {
 
     public void executeTurn(double speed, double angle)
     {
-      setSetpoint(angle);
+      setSetpoint(speed);
       PID();
-      DriveTrain.m_drive.arcadeDrive(speed, constrain(rcw*Math.PI/180));
+      SmartDashboard.putNumber("P", P);
+      SmartDashboard.putNumber("I", I);
+      SmartDashboard.putNumber("D", D);
+      can.set(speed);
     }
   @Override
   public void initDefaultCommand() {
