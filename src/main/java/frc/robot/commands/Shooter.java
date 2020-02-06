@@ -10,16 +10,18 @@ package frc.robot.commands;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.GathererSub;
 import frc.robot.subsystems.JoystickController;
+import frc.robot.subsystems.ShooterSub;
 
-public class Gatherer extends CommandBase {
+public class Shooter extends CommandBase {
 
-  static double gatspeed = 0;
+  static double topspeed = 0;
+  static double bottomspeed = 0;
+
   /**
-   * Creates a new Gatherer.
+   * Creates a new Shooter.
    */
-  public Gatherer() {
+  public Shooter() {
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -27,27 +29,40 @@ public class Gatherer extends CommandBase {
   @Override
   public void initialize() {
 
-    GathererSub.gatherer.set(ControlMode.PercentOutput, 0);
+    ShooterSub.top.set(ControlMode.PercentOutput, 0);
+    ShooterSub.bottom.set(ControlMode.PercentOutput, 0);
+
+  }
+
+  public void setSpeeds(double topspeed, double bottomspeed) {
+
+    Shooter.topspeed = topspeed;
+    Shooter.bottomspeed = bottomspeed;
+
+  }
+
+  public static void shoot(boolean pressed) {
+    if (pressed) {
+
+      ShooterSub.top.set(ControlMode.PercentOutput, topspeed);
+      ShooterSub.top.set(ControlMode.PercentOutput, bottomspeed);
+
+    } else {
+
+      ShooterSub.top.set(ControlMode.PercentOutput, 0);
+      ShooterSub.bottom.set(ControlMode.PercentOutput, 0);
+
+    }
 
   }
 
   // Called every time the scheduler runs while the command is scheduled.
-  @Override
   public void execute() {
 
-    for (int i = 0; i < 1; i++) {
-      if (JoystickController.button4P) {
-
-        GathererSub.gatherer.set(ControlMode.PercentOutput, 1);
-
-      } else {
-
-        GathererSub.gatherer.set(ControlMode.PercentOutput, 0);
-
-      }
-    }
+    shoot(JoystickController.triggerP);
 
   }
+  
 
   // Called once the command ends or is interrupted.
   @Override
