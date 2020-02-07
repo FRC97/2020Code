@@ -14,8 +14,8 @@ import frc.robot.RobotMap;
 
 public class ShooterSub extends SubsystemBase {
 
-  public static final WPI_TalonSRX top = new WPI_TalonSRX(RobotMap.topShooter_ID);
-  public static final WPI_TalonSRX bottom = new WPI_TalonSRX(RobotMap.bottomShooter_ID);
+  public static final WPI_TalonSRX top = new WPI_TalonSRX(RobotMap.TS);
+  public static final WPI_TalonSRX bottom = new WPI_TalonSRX(RobotMap.BS);
   /**
    * Creates a new Shooter.
    */

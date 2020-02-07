@@ -18,10 +18,10 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
  * Add your docs here.
  */
 public class DriveTrain extends Subsystem {
-  public static WPI_TalonSRX front_Left = new WPI_TalonSRX(RobotMap.front_Left_ID);
-  public static WPI_TalonSRX back_Left = new WPI_TalonSRX(RobotMap.back_Left_ID);
-  public static WPI_TalonSRX front_Right = new WPI_TalonSRX(RobotMap.front_Right_ID);
-  public static WPI_TalonSRX back_Right = new WPI_TalonSRX(RobotMap.back_Right_ID);
+  public static WPI_TalonSRX front_Left = new WPI_TalonSRX(RobotMap.FL);
+  public static WPI_TalonSRX back_Left = new WPI_TalonSRX(RobotMap.BL);
+  public static WPI_TalonSRX front_Right = new WPI_TalonSRX(RobotMap.FR);
+  public static WPI_TalonSRX back_Right = new WPI_TalonSRX(RobotMap.BR);
   static SpeedControllerGroup m_Right = new SpeedControllerGroup(back_Right, front_Right);
   static SpeedControllerGroup m_Left = new SpeedControllerGroup(back_Left, front_Left);
   public static DifferentialDrive m_drive = new DifferentialDrive(m_Left,m_Right);

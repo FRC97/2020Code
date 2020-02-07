@@ -56,6 +56,7 @@ public class PID_Drive extends PIDSubsystem {
           derivative = (error - this.previous_error) / .02;
           this.rcw = P*error + I*this.integral + D*derivative;
         }
+        previous_error = error;
     }
 
     public void executeTurn(double speed, double angle)
