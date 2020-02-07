@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import frc.robot.subsystems.JoystickController;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -35,7 +36,7 @@ public class Robot extends TimedRobot {
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  
+  private JoystickController joystickController = new JoystickController();
   
   // private WPI_TalonSRX TopShooterMotor = new WPI_TalonSRX(RobotMap.TS);
   // private WPI_TalonSRX BottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
@@ -84,9 +85,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    SmartDashboard.putNumber("Joy Stick X", joy.getRawAxis(0));
-    SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(1));
-    SmartDashboard.putNumber("Joy Stick Slider", joy.getRawAxis(3));
+    SmartDashboard.putNumber("Joy Stick X", joystickController.getX());
+    SmartDashboard.putNumber("Joy Stick Y", joystickController.getY());
+    SmartDashboard.putNumber("Joy Stick Slider", joystickController.getSlider());
     SmartDashboard.putNumber("Slider %-Value", sliderContrain());
     SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
     SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
@@ -112,17 +113,17 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    double speed = -contrain(joy.getRawAxis(1));
-    double turn = contrain(joy.getRawAxis(0));
+    double speed = -contrain(joystickController.getY());
+    double turn = contrain(joystickController.getX());
     Drive.arcadeDrive(speed*sliderContrain(), turn);
 
-    if (joy.getRawButton(2)){ 
-      GathererMotor.set(joy.getRawAxis(3));
+    if (joystickController.getB2()){ 
+      GathererMotor.set(.5);
     }
     else{
       GathererMotor.set(0);
     }
-    if (joy.getRawButton(4)){ 
+    if (joystickController.getB4()){ 
       IndexerMotor.set(-.5);
     }
     else{
@@ -130,32 +131,32 @@ public class Robot extends TimedRobot {
     }
     
     if (testMode){
-      if (joy.getRawButton(5)){
+      if (joystickController.getB5()){
         FR.set(0.5);
         FL.set(0);
         BR.set(0);
         BL.set(0);
       }
-      if (joy.getRawButton(6)){ 
+      if (joystickController.getB6()){ 
         FR.set(0);
         FL.set(0.5);
         BR.set(0);
         BL.set(0);
       }
-      if (joy.getRawButton(7)){ 
+      if (joystickController.getB7()){ 
         FR.set(0);
         FL.set(0);
         BR.set(0.5);
         BL.set(0);
       }
-      if (joy.getRawButton(8)){
+      if (joystickController.getB8()){
         FR.set(0);
         FL.set(0);
         BR.set(0);
         BL.set(0.5);
       }
     }
-    if (joy.getRawButtonPressed(9)) {
+    if (joystickController.getB9()) {
       testMode = !testMode;
     }
     //testMotor.set(speed);
@@ -180,7 +181,7 @@ public class Robot extends TimedRobot {
     }
   }
   private double sliderContrain(){
-    double v = joy.getRawAxis(3) - 1; //-1 to 1 turns to -2 to 0
+    double v = joystickController.getZ() - 1; //-1 to 1 turns to -2 to 0
     return Math.abs(v/2);
   }
 }
