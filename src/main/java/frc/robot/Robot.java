@@ -13,7 +13,10 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Scheduler;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.ArcadeDrive;
+import frc.robot.commands.Gatherer;
+import frc.robot.commands.Shooter;
 import frc.robot.subsystems.DriveTrain;
 
 /**
@@ -28,6 +31,8 @@ public class Robot extends TimedRobot {
   public static OI m_oi;
   public static Joystick m_stick;
   public ArcadeDrive m_ADrive;
+  public Shooter shooter;
+  public Gatherer gatherer;
 
   //private final DifferentialDrive m_robotDrive = new DifferentialDrive(Left, Right);
   private final Timer m_timer = new Timer();
@@ -45,10 +50,7 @@ public class Robot extends TimedRobot {
     m_stick = new Joystick(RobotMap.m_stick);
     m_ADrive = new ArcadeDrive();
 
-    
-    NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    table = inst.getTable("ChickenVision");
-    table = inst.getTable("Joystick");
+    SmartDashboard.putNumber("Speed", ArcadeDrive.speed);
   }
 
   @Override
@@ -101,32 +103,13 @@ public class Robot extends TimedRobot {
    * 
    * @return
    */
-  double x_value;
-
-  public double constrain(double num) {
-    if (num > 1) {
-      num = 1; 
-    }
-    else if (num < -1) {
-      num = -1;
-    }
-    return num;
-  }
+  
 
   @Override
   public void teleopPeriodic() {
-    Scheduler.getInstance().run();
-    /*
-    if (m_stick.getX() < 0.1 && m_stick.getX() > -0.1) {
-      x_value = 0;
-    } else {
-      x_value = m_stick.getX();
-    }
-    */
     m_ADrive.execute();
-    //m_robotDrive.arcadeDrive(m_stick.getY(), x_value);
-    //front_Left.set(ControlMode.PercentOutput, m_stick.getX());
-    //back_Left.set(ControlMode.PercentOutput, m_stick.getY()+0.1);
+    shooter.execute();
+    gatherer.execute();
   }
   /**
    * This function is called periodically during test mode.

@@ -45,7 +45,7 @@ public class Shooter extends CommandBase {
     if (pressed) {
 
       ShooterSub.top.set(ControlMode.PercentOutput, topspeed);
-      ShooterSub.top.set(ControlMode.PercentOutput, bottomspeed);
+      ShooterSub.top.set(ControlMode.PercentOutput, -bottomspeed);
 
     } else {
 

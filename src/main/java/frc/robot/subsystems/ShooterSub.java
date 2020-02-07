@@ -7,32 +7,24 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
+import frc.robot.RobotMap;
 
-public class JoystickController extends SubsystemBase {
+public class ShooterSub extends SubsystemBase {
+
+  public static final WPI_TalonSRX top = new WPI_TalonSRX(RobotMap.topShooter_ID);
+  public static final WPI_TalonSRX bottom = new WPI_TalonSRX(RobotMap.bottomShooter_ID);
   /**
-   * Creates a new JoystickController.
+   * Creates a new Shooter.
    */
-  public static final double Y_Value = Robot.m_stick.getRawAxis(1);
-  public static final double X_Value = Robot.m_stick.getRawAxis(0);
-  public static final double Z_Value = Robot.m_stick.getRawAxis(2);
-  public static final double slider = Robot.m_stick.getRawAxis(3);
-
-  public static final boolean triggerP = Robot.m_stick.getRawButtonPressed(1);
-  public static final boolean button4P = Robot.m_stick.getRawButtonPressed(4);
-
-
-
-  public JoystickController() {
-/**
- * Add your docs here.
- */
+  public ShooterSub() {
 
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
- }
+  }
 }

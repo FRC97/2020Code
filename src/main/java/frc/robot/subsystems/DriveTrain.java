@@ -7,30 +7,32 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
 import frc.robot.RobotMap;
-import frc.robot.commands.ArcadeDrive;
-
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 /**
  * Add your docs here.
  */
 public class DriveTrain extends Subsystem {
-  public static VictorSPX front_Left = new VictorSPX(RobotMap.front_Left_ID);
-  public static VictorSPX back_Left = new VictorSPX(RobotMap.back_Left_ID);
-  public static VictorSPX front_Right = new VictorSPX(RobotMap.front_Right_ID);
-  public static VictorSPX back_Right = new VictorSPX(RobotMap.back_Right_ID);
+  public static CANSparkMax front_Left = new CANSparkMax(RobotMap.front_Left_ID, MotorType.kBrushless);
+  public static CANSparkMax back_Left = new CANSparkMax(RobotMap.back_Left_ID, MotorType.kBrushless);
+  public static CANSparkMax front_Right = new CANSparkMax(RobotMap.front_Right_ID, MotorType.kBrushless);
+  public static CANSparkMax back_Right = new CANSparkMax(RobotMap.back_Right_ID, MotorType.kBrushless);
 
-  // Put methods for controlling this subsystem
-  // here. Call these from Commands.
+  static SpeedControllerGroup m_Right = new SpeedControllerGroup(back_Right, front_Right);
+  static SpeedControllerGroup m_Left = new SpeedControllerGroup(back_Left, front_Left);
 
+  public static DifferentialDrive m_drive = new DifferentialDrive(m_Left,m_Right);
+  //private PIDController pid = new PIDController(0.8, 0.2, 0.1);
 
   @Override
   public void initDefaultCommand() {
     // Set the default command for a subsystem here.
-    setDefaultCommand(new ArcadeDrive());
+    //setDefaultCommand();
 
   }
-
 }

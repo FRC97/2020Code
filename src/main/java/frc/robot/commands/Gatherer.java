@@ -35,17 +35,16 @@ public class Gatherer extends CommandBase {
   @Override
   public void execute() {
 
-    for (int i = 0; i < 1; i++) {
-      if (JoystickController.button4P) {
+    if (JoystickController.button4P) {
 
-        GathererSub.gatherer.set(ControlMode.PercentOutput, 1);
+      GathererSub.gatherer.set(ControlMode.PercentOutput, 1);
 
-      } else {
+    } else {
 
-        GathererSub.gatherer.set(ControlMode.PercentOutput, 0);
+      GathererSub.gatherer.set(ControlMode.PercentOutput, 0);
 
-      }
     }
+
 
   }
 
