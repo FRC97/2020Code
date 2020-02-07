@@ -53,13 +53,15 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
+  /*
   private WPI_VictorSPX FR = new WPI_VictorSPX(RobotMap.FR);
   private WPI_VictorSPX FL = new WPI_VictorSPX(RobotMap.FL);
   private CANSparkMax testMotor = new CANSparkMax(10, MotorType.kBrushless);;
   //private WPI_TalonSRX TestController = new WPI_TalonSRX(0);
   private WPI_TalonSRX BR = new WPI_TalonSRX(RobotMap.BR);
   private WPI_TalonSRX BL = new WPI_TalonSRX(RobotMap.BL);
-
+  */
+  private CANSparkMax testMotor = new CANSparkMax(10, MotorType.kBrushless);
   private Joystick joy = new Joystick(0);
 
   private SpeedControllerGroup right;
@@ -70,13 +72,13 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     // Inverted settings
-    FR.setInverted(false);
+   /* FR.setInverted(false);
     BR.setInverted(false);
     FL.setInverted(true);
     BL.setInverted(true);
 
     right = new SpeedControllerGroup(FR, BR);
-    left = new SpeedControllerGroup(BR, BL);
+    left = new SpeedControllerGroup(BR, BL);*/
 
     // Differential Driv Deadband percentage
     Drive = new DifferentialDrive(left, right);
@@ -99,6 +101,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(1));
     SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
+    //SmartDashboard.putNumber("FL velocity", driveTrain.FL.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
   }
   

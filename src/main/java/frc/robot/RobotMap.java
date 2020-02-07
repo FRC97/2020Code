@@ -11,20 +11,16 @@ package frc.robot;
  * Add your docs here.
  */
 public class RobotMap {
-    public static final int FL = 2;
-    public static final int FR = 1;
-    public static final int BL = 4;
-    public static final int BR = 3;
+    public static final int FL_ID = 4;
+    public static final int FR_ID = 2;
+    public static final int BL_ID = 3;
+    public static final int BR_ID = 1;
     public static final int test = 10;
 
 
     //private static final int DriveController = 0;
     //private static final int m_stick = 0;
 
-	public static final int front_Left_ID = 2;
-	public static final int back_Left_ID = 4;
-	public static final int front_Right_ID = 1;//6
-    public static final int back_Right_ID = 3;
 	public static final int driverController = 0;
 	public static final int m_stick = 0;
 	public static final int topshooter_ID = 5;
