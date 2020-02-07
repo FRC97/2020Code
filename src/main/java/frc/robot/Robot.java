@@ -49,7 +49,6 @@ public class Robot extends TimedRobot {
   //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
 
 
-  private Joystick joy = new Joystick(0);
 
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;

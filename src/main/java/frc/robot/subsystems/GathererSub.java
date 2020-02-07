@@ -14,7 +14,7 @@ import frc.robot.RobotMap;
 
 public class GathererSub extends SubsystemBase {
   
-  public static final WPI_VictorSPX gatherer = new WPI_VictorSPX(RobotMap.gatherer_ID);
+  public static final WPI_VictorSPX gatherer = new WPI_VictorSPX(RobotMap.Gatherer);
   /**
    * Creates a new Gatherer.
    */

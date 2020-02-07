@@ -18,8 +18,8 @@ public class Shooter extends SubsystemBase {
   /**
    * Creates a new Shooter.
    */
-  WPI_TalonSRX top = new WPI_TalonSRX(RobotMap.topshooter_ID);
-  WPI_TalonSRX bot = new WPI_TalonSRX(RobotMap.bottomshooter_ID);
+  WPI_TalonSRX top = new WPI_TalonSRX(RobotMap.TS);
+  WPI_TalonSRX bot = new WPI_TalonSRX(RobotMap.BS);
   double topspeed=0;
   double botspeed=0;
   public Shooter() {
