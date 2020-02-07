@@ -31,12 +31,23 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
-  private WPI_VictorSPX FR = new WPI_VictorSPX(RobotMap.FR);
-  private WPI_VictorSPX FL = new WPI_VictorSPX(RobotMap.FL);
-  private CANSparkMax testMotor = new CANSparkMax(10, MotorType.kBrushless);;
-  //private WPI_TalonSRX TestController = new WPI_TalonSRX(0);
-  private WPI_TalonSRX BR = new WPI_TalonSRX(RobotMap.BR);
-  private WPI_TalonSRX BL = new WPI_TalonSRX(RobotMap.BL);
+  private CANSparkMax FR = new CANSparkMax(RobotMap.FR, MotorType.kBrushless);
+  private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
+  private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
+  private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
+  
+  
+  // private WPI_TalonSRX TopShooterMotor = new WPI_TalonSRX(RobotMap.TS);
+  // private WPI_TalonSRX BottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
+
+  // private WPI_VictorSPX DeployClimbMotor = new WPI_VictorSPX(RobotMap.Dc);
+  // private WPI_VictorSPX RetractClimbMotor = new WPI_VictorSPX(RobotMap.Rc);
+
+  private WPI_VictorSPX GathererMotor = new WPI_VictorSPX(RobotMap.Gatherer);
+  private WPI_VictorSPX IndexerMotor = new WPI_VictorSPX(RobotMap.Indexer);
+  
+  //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
+
 
   private Joystick joy = new Joystick(0);
 
@@ -44,24 +55,25 @@ public class Robot extends TimedRobot {
   private SpeedControllerGroup left;
 
   private DifferentialDrive Drive;
+  
+  private boolean testMode = false;
 
   @Override
   public void robotInit() {
     // Inverted settings
-    FR.setInverted(false);
-    BR.setInverted(false);
-    FL.setInverted(true);
-    BL.setInverted(true);
+    // FR.setInverted(false);
+    // BR.setInverted(false);
+    // FL.setInverted(false);
+    // BL.setInverted(false);
 
     right = new SpeedControllerGroup(FR, BR);
-    left = new SpeedControllerGroup(BR, BL);
+    left = new SpeedControllerGroup(FL, BL);
 
     // Differential Driv Deadband percentage
     Drive = new DifferentialDrive(left, right);
     Drive.setDeadband(0.05);
 
-    // init encocder
-
+    // init encocder  
     /*
     RightMaster.setSensorPhase(true);
     RightMaster.setSensorPhase(false);
@@ -75,8 +87,15 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     SmartDashboard.putNumber("Joy Stick X", joy.getRawAxis(0));
     SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(1));
-    SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
+    SmartDashboard.putNumber("Joy Stick Slider", joy.getRawAxis(3));
+    SmartDashboard.putNumber("Slider %-Value", sliderContrain());
+    SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
+    SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
+    SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
+    SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
+    SmartDashboard.putBoolean("TEST MOTOR TOGGLE", testMode);
+    //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
+    //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
   }
   
@@ -96,9 +115,51 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     double speed = -contrain(joy.getRawAxis(1));
     double turn = contrain(joy.getRawAxis(0));
+    Drive.arcadeDrive(speed*sliderContrain(), turn);
+
+    if (joy.getRawButton(2)){ 
+      GathererMotor.set(joy.getRawAxis(3));
+    }
+    else{
+      GathererMotor.set(0);
+    }
+    if (joy.getRawButton(4)){ 
+      IndexerMotor.set(-.5);
+    }
+    else{
+      IndexerMotor.set(0);
+    }
     
-    Drive.arcadeDrive(speed, turn);
-    testMotor.set(speed);
+    if (testMode){
+      if (joy.getRawButton(5)){
+        FR.set(0.5);
+        FL.set(0);
+        BR.set(0);
+        BL.set(0);
+      }
+      if (joy.getRawButton(6)){ 
+        FR.set(0);
+        FL.set(0.5);
+        BR.set(0);
+        BL.set(0);
+      }
+      if (joy.getRawButton(7)){ 
+        FR.set(0);
+        FL.set(0);
+        BR.set(0.5);
+        BL.set(0);
+      }
+      if (joy.getRawButton(8)){
+        FR.set(0);
+        FL.set(0);
+        BR.set(0);
+        BL.set(0.5);
+      }
+    }
+    if (joy.getRawButtonPressed(9)) {
+      testMode = !testMode;
+    }
+    //testMotor.set(speed);
   }
 
   @Override
@@ -118,5 +179,9 @@ public class Robot extends TimedRobot {
     else{
       return value;
     }
+  }
+  private double sliderContrain(){
+    double v = joy.getRawAxis(3) - 1; //-1 to 1 turns to -2 to 0
+    return Math.abs(v/2);
   }
 }
