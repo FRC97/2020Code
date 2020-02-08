@@ -14,8 +14,8 @@ import frc.robot.subsystems.JoystickController;
 
 public class ArcadeDrive extends Command {
   public DriveTrain m_DriveTrain = new DriveTrain();
-
-  public final static double speed = constrain(JoystickController.Y_Value);
+  public JoystickController joystickController = new JoystickController();
+  public final double speed = constrain(joystickController.getY());
 
   public ArcadeDrive() {
     // Use requires() here to declare subsystem dependencies
@@ -48,13 +48,13 @@ public class ArcadeDrive extends Command {
   @Override
   public void execute() {
 
-    DriveTrain.m_drive.arcadeDrive(speed, getAngle(JoystickController.X_Value, JoystickController.Y_Value));
+    DriveTrain.m_drive.arcadeDrive(speed, getAngle(joystickController.getX(), joystickController.getY()));
 
   }
 
-  private static double constrain(double num) {
+  private double constrain(double num) {
 
-    double joy = JoystickController.slider / 2;
+    double joy = joystickController.getSlider() / 2;
 
     if (num > 1) {
       num = 1;

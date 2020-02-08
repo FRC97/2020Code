@@ -17,7 +17,7 @@ public class Shooter extends CommandBase {
 
   static double topspeed = 0;
   static double bottomspeed = 0;
-
+  public JoystickController joystickController = new JoystickController();
   /**
    * Creates a new Shooter.
    */
@@ -59,7 +59,7 @@ public class Shooter extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   public void execute() {
 
-    shoot(JoystickController.triggerP);
+    shoot(joystickController.getTrig());
 
   }
   

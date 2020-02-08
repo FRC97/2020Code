@@ -14,7 +14,7 @@ import frc.robot.subsystems.GathererSub;
 import frc.robot.subsystems.JoystickController;
 
 public class Gatherer extends CommandBase {
-
+  public JoystickController joystickController = new JoystickController();
   static double gatspeed = 0;
   /**
    * Creates a new Gatherer.
@@ -35,7 +35,7 @@ public class Gatherer extends CommandBase {
   @Override
   public void execute() {
 
-    if (JoystickController.button4P) {
+    if (joystickController.getB4()) {
 
       GathererSub.gatherer.set(ControlMode.PercentOutput, 1);
 
