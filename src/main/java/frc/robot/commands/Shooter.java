@@ -7,21 +7,16 @@
 
 package frc.robot.commands;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.JoystickController;
-import frc.robot.subsystems.ShooterSub;
+import frc.robot.subsystems.JoystickMap;
+import frc.robot.subsystems.ShooterController;
 
 public class Shooter extends CommandBase {
 
-  static double topspeed = 0;
-  static double bottomspeed = 0;
-  public JoystickController joystickController = new JoystickController();
-  /**
-   * Creates a new Shooter.
-   */
+  private final ShooterController shooterController = new ShooterController();
+
   public Shooter() {
+    addRequirements(shooterController);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -29,37 +24,28 @@ public class Shooter extends CommandBase {
   @Override
   public void initialize() {
 
-    ShooterSub.top.set(ControlMode.PercentOutput, 0);
-    ShooterSub.bottom.set(ControlMode.PercentOutput, 0);
-
+    shooterController.shoot(0.0, 0.0);
   }
 
-  public void setSpeeds(double topspeed, double bottomspeed) {
+  private void setSpeeds(double topspeed, double bottomspeed) {
 
-    Shooter.topspeed = topspeed;
-    Shooter.bottomspeed = bottomspeed;
-
+    shooterController.shoot(topspeed, bottomspeed);
   }
 
-  public static void shoot(boolean pressed) {
+  private void shoot(boolean pressed) {
     if (pressed) {
 
-      ShooterSub.top.set(ControlMode.PercentOutput, topspeed);
-      ShooterSub.top.set(ControlMode.PercentOutput, -bottomspeed);
+      setSpeeds(1.0,1.0);
 
     } else {
-
-      ShooterSub.top.set(ControlMode.PercentOutput, 0);
-      ShooterSub.bottom.set(ControlMode.PercentOutput, 0);
-
+      setSpeeds(0.0, 0.0);
     }
-
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   public void execute() {
 
-    shoot(joystickController.getTrig());
+    shoot(JoystickMap.joyStick.getRawButtonPressed(JoystickMap.triggerP));
 
   }
   

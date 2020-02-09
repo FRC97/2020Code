@@ -19,7 +19,15 @@ public class GathererSub extends SubsystemBase {
    * Creates a new Gatherer.
    */
   public GathererSub() {
+  }
 
+  public void active(boolean toggle) {
+      if (toggle){
+        gatherer.set(.75);
+      }
+      else{
+        gatherer.set(0);
+      }
   }
 
   @Override

@@ -7,45 +7,37 @@
 
 package frc.robot.commands;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.GathererSub;
-import frc.robot.subsystems.JoystickController;
+import frc.robot.subsystems.JoystickMap;;
 
 public class Gatherer extends CommandBase {
-  public JoystickController joystickController = new JoystickController();
-  static double gatspeed = 0;
   /**
    * Creates a new Gatherer.
    */
+  private boolean isGathererOn = false;
+  private GathererSub gathererSub;
   public Gatherer() {
-    // Use addRequirements() here to declare subsystem dependencies.
+    initialize();
+    addRequirements(gathererSub);
+    
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
-    GathererSub.gatherer.set(ControlMode.PercentOutput, 0);
-
+    gathererSub = new GathererSub();
+    isGathererOn = false;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-    if (joystickController.getB4()) {
-
-      GathererSub.gatherer.set(ControlMode.PercentOutput, 1);
-
-    } else {
-
-      GathererSub.gatherer.set(ControlMode.PercentOutput, 0);
-
+    if (JoystickMap.joyStick.getRawButtonPressed(JoystickMap.button4P)){
+      isGathererOn = !isGathererOn;
+      gathererSub.active(isGathererOn);
     }
-
-
   }
 
   // Called once the command ends or is interrupted.

@@ -24,7 +24,7 @@ public class PID_Drive extends PIDSubsystem {
   /**
    * Add your docs here.
    */
-  double speed;
+    double speed;
     double P, I, D = 1;
     double integral, previous_error, setpoint = 0;
     Gyro gyro;
@@ -35,7 +35,7 @@ public class PID_Drive extends PIDSubsystem {
 
 
     public PID_Drive(double P, double I, double D, Gyro gyro){
-        
+
       super("SubsystemName", P, I, D);  
       this.P = P;
       this.I = I;
