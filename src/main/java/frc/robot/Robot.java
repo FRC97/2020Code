@@ -15,10 +15,16 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
+import frc.robot.commands.Gatherer;
+import frc.robot.commands.Shooter;
+import frc.robot.subsystems.JoystickMap;
 
-import frc.robot.subsystems.JoystickController;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -36,20 +42,18 @@ public class Robot extends TimedRobot {
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  private JoystickController joystickController = new JoystickController();
+  
   
   // private WPI_TalonSRX TopShooterMotor = new WPI_TalonSRX(RobotMap.TS);
   // private WPI_TalonSRX BottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
 
   // private WPI_VictorSPX DeployClimbMotor = new WPI_VictorSPX(RobotMap.Dc);
   // private WPI_VictorSPX RetractClimbMotor = new WPI_VictorSPX(RobotMap.Rc);
-
-  private WPI_VictorSPX GathererMotor = new WPI_VictorSPX(RobotMap.Gatherer);
-  private WPI_VictorSPX IndexerMotor = new WPI_VictorSPX(RobotMap.Indexer);
   
   //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
 
 
+  private Joystick joy = JoystickMap.joyStick;
 
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
@@ -83,17 +87,20 @@ public class Robot extends TimedRobot {
     */
   }
 
+  /**
+   * Displays values into SmartDashboard
+   */
   @Override
   public void robotPeriodic() {
-    SmartDashboard.putNumber("Joy Stick X", joystickController.getX());
-    SmartDashboard.putNumber("Joy Stick Y", joystickController.getY());
-    SmartDashboard.putNumber("Joy Stick Slider", joystickController.getSlider());
+    SmartDashboard.putNumber("Joy Stick X", joy.getRawAxis(JoystickMap.Xval));
+    SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(JoystickMap.Yval));
+    SmartDashboard.putNumber("Joy Stick Slider", joy.getRawAxis(JoystickMap.slider));
     SmartDashboard.putNumber("Slider %-Value", sliderContrain());
     SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
     SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
     SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
     SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
-    SmartDashboard.putBoolean("TEST MOTOR TOGGLE", testMode);
+    SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
@@ -109,54 +116,47 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+
+    // Scheduler.getInstance().add();
+    // Scheduler.getInstance().add();
   }
 
   @Override
   public void teleopPeriodic() {
-    double speed = -contrain(joystickController.getY());
-    double turn = contrain(joystickController.getX());
-    Drive.arcadeDrive(speed*sliderContrain(), turn);
-
-    if (joystickController.getB2()){ 
-      GathererMotor.set(.5);
-    }
-    else{
-      GathererMotor.set(0);
-    }
-    if (joystickController.getB4()){ 
-      IndexerMotor.set(-.5);
-    }
-    else{
-      IndexerMotor.set(0);
-    }
+    
+    double speed = -contrain(joy.getRawAxis(JoystickMap.Yval));
+    double turn = contrain(joy.getRawAxis(JoystickMap.Xval));
+    Drive.arcadeDrive(speed*sliderContrain(), turn*(0.4));
+    
+    
     
     if (testMode){
-      if (joystickController.getB5()){
+      if (joy.getRawButton(5)){
         FR.set(0.5);
         FL.set(0);
         BR.set(0);
         BL.set(0);
       }
-      if (joystickController.getB6()){ 
+      if (joy.getRawButton(6)){ 
         FR.set(0);
         FL.set(0.5);
         BR.set(0);
         BL.set(0);
       }
-      if (joystickController.getB7()){ 
+      if (joy.getRawButton(7)){ 
         FR.set(0);
         FL.set(0);
         BR.set(0.5);
         BL.set(0);
       }
-      if (joystickController.getB8()){
+      if (joy.getRawButton(8)){
         FR.set(0);
         FL.set(0);
         BR.set(0);
         BL.set(0.5);
       }
     }
-    if (joystickController.getB9()) {
+    if (joy.getRawButtonPressed(9)) {
       testMode = !testMode;
     }
     //testMotor.set(speed);
@@ -181,7 +181,35 @@ public class Robot extends TimedRobot {
     }
   }
   private double sliderContrain(){
-    double v = joystickController.getZ() - 1; //-1 to 1 turns to -2 to 0
+    double v = joy.getRawAxis(JoystickMap.slider) - 1; //-1 to 1 turns to -2 to 0
     return Math.abs(v/2);
+  }
+  
+  private double[] speedAndRPM(){
+    double[] thing = new double[2];
+
+    /**
+     * Averages all 4 motor RPM
+     */
+    double avgRpm = 
+    (
+    FR.getEncoder().getVelocity() + 
+    FL.getEncoder().getVelocity() + 
+    BR.getEncoder().getVelocity() + 
+    BL.getEncoder().getVelocity()
+    )/4;
+
+    /**
+     * RPM to MPH formula
+     * Shaft radius: 0.004m
+     * Link:
+     * https://www.humblix.com/i6dea32/how-to-convert-angular-velocity-expressed-in-revolutions-per-second-rpm-to-linear-speed-expressed-in-meters-per-second-m-s
+     */
+    double shaftSpeed = ((Math.PI*2 * 0.004)/60)*avgRpm;
+
+    thing[0] = shaftSpeed;
+    thing[1] = avgRpm;
+
+    return thing;
   }
 }
