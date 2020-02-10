@@ -8,9 +8,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.JoystickMap;
+import frc.robot.JoystickMap;
 import frc.robot.subsystems.ShooterController;
-import edu.wpi.first.wpilibj.Ultrasonic;
 
 public class Shooter extends CommandBase {
 
@@ -28,9 +27,7 @@ public class Shooter extends CommandBase {
 
   // Called every time the scheduler runs while the command is scheduled.
   public void execute() {
-
     shooterController.shoot(JoystickMap.joyStick.getRawButtonPressed(JoystickMap.triggerP));
-
   }
   
 

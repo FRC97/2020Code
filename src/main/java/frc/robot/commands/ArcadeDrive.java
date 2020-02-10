@@ -10,8 +10,8 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
+import frc.robot.JoystickMap;
 import frc.robot.subsystems.DriveTrain;
-import frc.robot.subsystems.JoystickMap; //Joy stick Subsystem class
 
 /**
  * Class file resembles functions that of in Robot.java.

@@ -9,7 +9,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.GathererSub;
-import frc.robot.subsystems.JoystickMap;;
+import frc.robot.JoystickMap;
 
 public class Gatherer extends CommandBase {
   /**
@@ -20,7 +20,6 @@ public class Gatherer extends CommandBase {
   public Gatherer() {
     initialize();
     addRequirements(gathererSub);
-    
   }
 
   // Called when the command is initially scheduled.

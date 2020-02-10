@@ -18,7 +18,8 @@ import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.JoystickMap;
+import frc.robot.subsystems.ShooterController;
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 
 /**
@@ -33,15 +34,15 @@ public class Robot extends TimedRobot {
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
+  //private final ShooterController shooterController = new ShooterController();
   //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
   private Joystick joy = JoystickMap.joyStick;
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
   private DifferentialDrive Drive;
   private AnalogGyro gyro;
-  private CameraServer cameraServer;
+  private CameraServer cameraServer = CameraServer.getInstance();
   private int reverseDrive = 1;
-
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
@@ -70,7 +71,7 @@ public class Robot extends TimedRobot {
     LeftMaster.setSelectedSensorPosition(0, 0, 10);
     */
     //init Server Camera
-    cameraServer.startAutomaticCapture();
+    cameraServer.startAutomaticCapture(0);
     //init Gyro
     gyro = new AnalogGyro(0);
   }
@@ -88,7 +89,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
     SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
     SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
-    SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
+    //SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
     SmartDashboard.putNumber("Gyro", gyro.getAngle());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
@@ -97,6 +98,9 @@ public class Robot extends TimedRobot {
   
   @Override
   public void autonomousInit() {
+    gyro.reset();
+    //0.02s loop
+    //gyro.setSensitivity();
   }
 
   @Override
@@ -116,6 +120,7 @@ public class Robot extends TimedRobot {
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
     Drive.arcadeDrive(speed*sliderContrain(), turn*(0.4));
 
+   //shooterController.shoot(JoystickMap.joyStick.getRawButtonPressed(JoystickMap.triggerP));
     if (joy.getRawButtonPressed(JoystickMap.button9P)) {
       reverseDrive*= -1;
     }
@@ -158,9 +163,8 @@ public class Robot extends TimedRobot {
     BR.getEncoder().getVelocity() + 
     BL.getEncoder().getVelocity()
     )/4;
-
     /**
-     * RPM to MPH formula
+     * RPM to m/s formula
      * Shaft radius: 0.004m
      * Link:
      * https://www.humblix.com/i6dea32/how-to-convert-angular-velocity-expressed-in-revolutions-per-second-rpm-to-linear-speed-expressed-in-meters-per-second-m-s

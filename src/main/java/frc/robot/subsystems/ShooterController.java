@@ -24,8 +24,8 @@ public class ShooterController extends SubsystemBase {
   private WPI_TalonSRX bottomShooterMotor;
 
   public ShooterController(){
-    topShooterMotor = new WPI_TalonSRX(RobotMap.TS);
-    bottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
+    topShooterMotor = new WPI_TalonSRX(10);
+    bottomShooterMotor = new WPI_TalonSRX(10);
 
     topShooterMotor.set(0);
     bottomShooterMotor.set(0);
@@ -70,8 +70,8 @@ public class ShooterController extends SubsystemBase {
    */
   public void shoot(boolean pressed){
     if (pressed){
-      topShooterMotor.set(ControlMode.Velocity, Calculate()[0]);
-      bottomShooterMotor.set(ControlMode.Velocity, Calculate()[1]);
+      topShooterMotor.set(ControlMode.Velocity, 0.7);
+      bottomShooterMotor.set(ControlMode.Velocity, -0.7);
     }
   }
 }
