@@ -12,19 +12,14 @@ import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
-import frc.robot.commands.Gatherer;
-import frc.robot.commands.Shooter;
 import frc.robot.subsystems.JoystickMap;
-
+import edu.wpi.first.cameraserver.CameraServer;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -34,34 +29,23 @@ import frc.robot.subsystems.JoystickMap;
  * project.
  */
 public class Robot extends TimedRobot {
-  /**
-   * This function is run when the robot is first started up and should be used
-   * for any initialization code.
-   */
   private CANSparkMax FR = new CANSparkMax(RobotMap.FR, MotorType.kBrushless);
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  
-  
-  // private WPI_TalonSRX TopShooterMotor = new WPI_TalonSRX(RobotMap.TS);
-  // private WPI_TalonSRX BottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
-
-  // private WPI_VictorSPX DeployClimbMotor = new WPI_VictorSPX(RobotMap.Dc);
-  // private WPI_VictorSPX RetractClimbMotor = new WPI_VictorSPX(RobotMap.Rc);
-  
   //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
-
-
   private Joystick joy = JoystickMap.joyStick;
-
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
-
   private DifferentialDrive Drive;
-  
-  private boolean testMode = false;
+  private AnalogGyro gyro;
+  private CameraServer cameraServer;
+  private int reverseDrive = 1;
 
+  /**
+   * This function is run when the robot is first started up and should be used
+   * for any initialization code.
+   */
   @Override
   public void robotInit() {
     // Inverted settings
@@ -85,6 +69,10 @@ public class Robot extends TimedRobot {
     RightMaster.setSelectedSensorPosition(0, 0, 10);
     LeftMaster.setSelectedSensorPosition(0, 0, 10);
     */
+    //init Server Camera
+    cameraServer.startAutomaticCapture();
+    //init Gyro
+    gyro = new AnalogGyro(0);
   }
 
   /**
@@ -101,6 +89,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
     SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
     SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
+    SmartDashboard.putNumber("Gyro", gyro.getAngle());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
@@ -123,41 +112,12 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    
-    double speed = -contrain(joy.getRawAxis(JoystickMap.Yval));
-    double turn = contrain(joy.getRawAxis(JoystickMap.Xval));
+    double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
+    double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
     Drive.arcadeDrive(speed*sliderContrain(), turn*(0.4));
-    
-    
-    
-    if (testMode){
-      if (joy.getRawButton(5)){
-        FR.set(0.5);
-        FL.set(0);
-        BR.set(0);
-        BL.set(0);
-      }
-      if (joy.getRawButton(6)){ 
-        FR.set(0);
-        FL.set(0.5);
-        BR.set(0);
-        BL.set(0);
-      }
-      if (joy.getRawButton(7)){ 
-        FR.set(0);
-        FL.set(0);
-        BR.set(0.5);
-        BL.set(0);
-      }
-      if (joy.getRawButton(8)){
-        FR.set(0);
-        FL.set(0);
-        BR.set(0);
-        BL.set(0.5);
-      }
-    }
-    if (joy.getRawButtonPressed(9)) {
-      testMode = !testMode;
+
+    if (joy.getRawButtonPressed(JoystickMap.button9P)) {
+      reverseDrive*= -1;
     }
     //testMotor.set(speed);
   }

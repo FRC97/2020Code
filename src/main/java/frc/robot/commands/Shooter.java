@@ -10,11 +10,12 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.JoystickMap;
 import frc.robot.subsystems.ShooterController;
+import edu.wpi.first.wpilibj.Ultrasonic;
 
 public class Shooter extends CommandBase {
 
   private final ShooterController shooterController = new ShooterController();
-
+  
   public Shooter() {
     addRequirements(shooterController);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -23,29 +24,12 @@ public class Shooter extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
-    shooterController.shoot(0.0, 0.0);
-  }
-
-  private void setSpeeds(double topspeed, double bottomspeed) {
-
-    shooterController.shoot(topspeed, bottomspeed);
-  }
-
-  private void shoot(boolean pressed) {
-    if (pressed) {
-
-      setSpeeds(1.0,1.0);
-
-    } else {
-      setSpeeds(0.0, 0.0);
-    }
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   public void execute() {
 
-    shoot(JoystickMap.joyStick.getRawButtonPressed(JoystickMap.triggerP));
+    shooterController.shoot(JoystickMap.joyStick.getRawButtonPressed(JoystickMap.triggerP));
 
   }
   
