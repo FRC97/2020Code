@@ -7,17 +7,13 @@
 
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import frc.robot.commands.ArcadeDrive;
+import frc.robot.commands.Autonomous;
+import frc.robot.commands.Shooter;
+import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.JoystickController;
 
 /**
@@ -32,55 +28,18 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
-  private CANSparkMax FR = new CANSparkMax(RobotMap.FR, MotorType.kBrushless);
-  private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
-  private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
-  private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
+  private ArcadeDrive ADrive;
+  private Autonomous auto;
   private JoystickController joystickController = new JoystickController();
-  
-  // private WPI_TalonSRX TopShooterMotor = new WPI_TalonSRX(RobotMap.TS);
-  // private WPI_TalonSRX BottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
-
-  // private WPI_VictorSPX DeployClimbMotor = new WPI_VictorSPX(RobotMap.Dc);
-  // private WPI_VictorSPX RetractClimbMotor = new WPI_VictorSPX(RobotMap.Rc);
-
-  private WPI_VictorSPX GathererMotor = new WPI_VictorSPX(RobotMap.Gatherer);
-  private WPI_VictorSPX IndexerMotor = new WPI_VictorSPX(RobotMap.Indexer);
+  private Gyro gyro;
   
   //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
-
-
-
-  private SpeedControllerGroup right;
-  private SpeedControllerGroup left;
-
-  private DifferentialDrive Drive;
   
   private boolean testMode = false;
 
   @Override
   public void robotInit() {
-    // Inverted settings
-    // FR.setInverted(false);
-    // BR.setInverted(false);
-    // FL.setInverted(false);
-    // BL.setInverted(false);
 
-    right = new SpeedControllerGroup(FR, BR);
-    left = new SpeedControllerGroup(FL, BL);
-
-    // Differential Driv Deadband percentage
-    Drive = new DifferentialDrive(left, right);
-    Drive.setDeadband(0.05);
-
-    // init encocder  
-    /*
-    RightMaster.setSensorPhase(true);
-    RightMaster.setSensorPhase(false);
-
-    RightMaster.setSelectedSensorPosition(0, 0, 10);
-    LeftMaster.setSelectedSensorPosition(0, 0, 10);
-    */
   }
 
   @Override
@@ -88,11 +47,11 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Joy Stick X", joystickController.getX());
     SmartDashboard.putNumber("Joy Stick Y", joystickController.getY());
     SmartDashboard.putNumber("Joy Stick Slider", joystickController.getSlider());
-    SmartDashboard.putNumber("Slider %-Value", sliderContrain());
-    SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
-    SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
-    SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
-    SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
+    SmartDashboard.putNumber("Slider %-Value", ArcadeDrive.constrain(joystickController.getY()));
+    SmartDashboard.putNumber("NEO BACK RIGHT", DriveTrain.BR.get());
+    SmartDashboard.putNumber("NEO FRONT RIGHT", DriveTrain.FR.get());
+    SmartDashboard.putNumber("NEO FRONT LEFT", DriveTrain.FL.get());
+    SmartDashboard.putNumber("NEO BACK LEFT", DriveTrain.BL.get());
     SmartDashboard.putBoolean("TEST MOTOR TOGGLE", testMode);
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
@@ -101,10 +60,15 @@ public class Robot extends TimedRobot {
   
   @Override
   public void autonomousInit() {
+
   }
 
   @Override
   public void autonomousPeriodic() {
+
+    auto.execute();
+    Shooter.shoot(Autonomous.canshoot);
+
   }
 
   @Override
@@ -113,52 +77,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    double speed = -contrain(joystickController.getY());
-    double turn = contrain(joystickController.getX());
-    Drive.arcadeDrive(speed*sliderContrain(), turn);
 
-    if (joystickController.getB2()){ 
-      GathererMotor.set(.5);
-    }
-    else{
-      GathererMotor.set(0);
-    }
-    if (joystickController.getB4()){ 
-      IndexerMotor.set(-.5);
-    }
-    else{
-      IndexerMotor.set(0);
-    }
-    
-    if (testMode){
-      if (joystickController.getB5()){
-        FR.set(0.5);
-        FL.set(0);
-        BR.set(0);
-        BL.set(0);
-      }
-      if (joystickController.getB6()){ 
-        FR.set(0);
-        FL.set(0.5);
-        BR.set(0);
-        BL.set(0);
-      }
-      if (joystickController.getB7()){ 
-        FR.set(0);
-        FL.set(0);
-        BR.set(0.5);
-        BL.set(0);
-      }
-      if (joystickController.getB8()){
-        FR.set(0);
-        FL.set(0);
-        BR.set(0);
-        BL.set(0.5);
-      }
-    }
-    if (joystickController.getB9()) {
-      testMode = !testMode;
-    }
+    ADrive.execute();
+
     //testMotor.set(speed);
   }
 
@@ -169,19 +90,5 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
   }
-  private double contrain(double value){
-    if (value > 1){
-      return 1;
-    }
-    else if (value < -1){
-      return -1;
-    }
-    else{
-      return value;
-    }
-  }
-  private double sliderContrain(){
-    double v = joystickController.getZ() - 1; //-1 to 1 turns to -2 to 0
-    return Math.abs(v/2);
-  }
+  
 }

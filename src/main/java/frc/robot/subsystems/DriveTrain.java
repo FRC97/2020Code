@@ -21,13 +21,17 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
  * Add your docs here.
  */
 public class DriveTrain extends Subsystem {
+  
   public static CANSparkMax FL = new CANSparkMax(RobotMap.FL,MotorType.kBrushless);
   public static CANSparkMax BL = new CANSparkMax(RobotMap.BL,MotorType.kBrushless);
   public static CANSparkMax FR = new CANSparkMax(RobotMap.FR,MotorType.kBrushless);
   public static CANSparkMax BR = new CANSparkMax(RobotMap.BR,MotorType.kBrushless);
+
   static SpeedControllerGroup MR = new SpeedControllerGroup(BR, FR);
   static SpeedControllerGroup ML = new SpeedControllerGroup(BL, FL);
-  public static DifferentialDrive m_drive = new DifferentialDrive(ML,MR);
+
+  public static DifferentialDrive m_drive = new DifferentialDrive(ML, MR);
+
   //private PIDController pid = new PIDController(0.8, 0.2, 0.1);
   // Put methods for controlling this subsystem
   // here. Call these from Commands.

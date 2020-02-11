@@ -13,8 +13,9 @@ import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.JoystickController;
 
 public class ArcadeDrive extends Command {
+
   public DriveTrain m_DriveTrain = new DriveTrain();
-  public JoystickController joystickController = new JoystickController();
+  public static JoystickController joystickController = new JoystickController();
   public final double speed = constrain(joystickController.getY());
 
   public ArcadeDrive() {
@@ -25,6 +26,16 @@ public class ArcadeDrive extends Command {
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+
+    DriveTrain.m_drive.setDeadband(0.05);
+
+    /*
+     * RightMaster.setSensorPhase(true); LeftMaster.setSensorPhase(false);
+     * 
+     * RightMaster.setSelectedSensorPosition(0, 0, 10);
+     * LeftMaster.setSelectedSensorPosition(0, 0, 10);
+     */
+
   }
 
   double Rotation;
@@ -41,7 +52,7 @@ public class ArcadeDrive extends Command {
   }
 
   public double getAngle(double x, double y) {
-    return Math.atan(x/y)/Math.PI;
+    return Math.atan(x / y) / Math.PI;
   }
 
   // Called repeatedly when this Command is scheduled to run
@@ -52,7 +63,7 @@ public class ArcadeDrive extends Command {
 
   }
 
-  private double constrain(double num) {
+  public static double constrain(double num) {
 
     double joy = joystickController.getSlider() / 2;
 

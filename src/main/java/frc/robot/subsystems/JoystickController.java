@@ -16,22 +16,20 @@ public class JoystickController extends SubsystemBase {
    */
   private Joystick joy = new Joystick(0);
   private double Yval = joy.getRawAxis(1);
-  private  double Xval = joy.getRawAxis(0);
-  private  double Zval = joy.getRawAxis(2);
-  private  double slider = joy.getRawAxis(3);
+  private double Xval = joy.getRawAxis(0);
+  private double Zval = joy.getRawAxis(2);
+  private double slider = joy.getRawAxis(3);
 
-  private  boolean triggerP = joy.getRawButtonPressed(1);
-  private  boolean button2P = joy.getRawButtonPressed(2);
-  private  boolean button3P = joy.getRawButtonPressed(3);
-  private  boolean button4P = joy.getRawButtonPressed(4);
-  private  boolean button5P = joy.getRawButtonPressed(5);
-  private  boolean button6P = joy.getRawButtonPressed(6);
-  private  boolean button7P = joy.getRawButtonPressed(7);
-  private  boolean button8P = joy.getRawButtonPressed(8);
-  private  boolean button9P = joy.getRawButtonPressed(9);
-  private  boolean button10P = joy.getRawButtonPressed(10);
-
-
+  private boolean triggerP = joy.getRawButtonPressed(1);
+  private boolean button2P = joy.getRawButtonPressed(2);
+  private boolean button3P = joy.getRawButtonPressed(3);
+  private boolean button4P = joy.getRawButtonPressed(4);
+  private boolean button5P = joy.getRawButtonPressed(5);
+  private boolean button6P = joy.getRawButtonPressed(6);
+  private boolean button7P = joy.getRawButtonPressed(7);
+  private boolean button8P = joy.getRawButtonPressed(8);
+  private boolean button9P = joy.getRawButtonPressed(9);
+  private boolean button10P = joy.getRawButtonPressed(10);
 
   public JoystickController() {
 /**
