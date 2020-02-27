@@ -16,10 +16,11 @@ import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.GathererSub;
 import frc.robot.subsystems.ShooterController;
-import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 
 /**
@@ -34,42 +35,40 @@ public class Robot extends TimedRobot {
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  //private final ShooterController shooterController = new ShooterController();
-  //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
-  private Joystick joy = JoystickMap.joyStick;
+  private CANSparkMax gatherer = new CANSparkMax(RobotMap.Gatherer, MotorType.kBrushless);
+  private CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
+  private CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
   private DifferentialDrive Drive;
+  private Joystick joy = JoystickMap.joyStick;
   private AnalogGyro gyro;
   private CameraServer cameraServer = CameraServer.getInstance();
   private int reverseDrive = 1;
+  private boolean gathering = false;
+  private CANSparkMax testMotor = new CANSparkMax(100, MotorType.kBrushless);
+  private DifferentialDrive testDiff;
+  //public static final Ultrasonic.Unit kMillimeters;
+  private Ultrasonic ultrasonic = new Ultrasonic(2, 3);
+  
   /**
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
   @Override
   public void robotInit() {
-    // Inverted settings
-    // FR.setInverted(false);
-    // BR.setInverted(false);
-    // FL.setInverted(false);
-    // BL.setInverted(false);
-
+    // Speed Controller Group
     right = new SpeedControllerGroup(FR, BR);
     left = new SpeedControllerGroup(FL, BL);
 
     // Differential Driv Deadband percentage
+    topShooterMotor.setInverted(true);
     Drive = new DifferentialDrive(left, right);
     Drive.setDeadband(0.05);
-
+    //testDiff = new DifferentialDrive(topShooterMotor, bottomShooterMotor);
+    
     // init encocder  
-    /*
-    RightMaster.setSensorPhase(true);
-    RightMaster.setSensorPhase(false);
 
-    RightMaster.setSelectedSensorPosition(0, 0, 10);
-    LeftMaster.setSelectedSensorPosition(0, 0, 10);
-    */
     //init Server Camera
     cameraServer.startAutomaticCapture(0);
     //init Gyro
@@ -89,8 +88,9 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
     SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
     SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
-    //SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
     SmartDashboard.putNumber("Gyro", gyro.getAngle());
+    SmartDashboard.putNumber("Ultrasonic", ultrasonic.getRangeMM()*0.001);
+    SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
@@ -110,21 +110,26 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
 
-    // Scheduler.getInstance().add();
-    // Scheduler.getInstance().add();
   }
-
   @Override
   public void teleopPeriodic() {
     double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
-    Drive.arcadeDrive(speed*sliderContrain(), turn*(0.4));
 
-   //shooterController.shoot(JoystickMap.joyStick.getRawButtonPressed(JoystickMap.triggerP));
+    Drive.arcadeDrive(speed*sliderContrain(), turn*sliderContrain());
+
     if (joy.getRawButtonPressed(JoystickMap.button9P)) {
       reverseDrive*= -1;
     }
-    //testMotor.set(speed);
+
+    if (joy.getRawButtonPressed(JoystickMap.button4P)) {
+      gathering = !gathering;
+      GathererSub.active(gathering);
+    }
+
+    ShooterController.shoot(joy.getRawButtonPressed(JoystickMap.triggerP), ultrasonic.getRangeMM() * 0.001);
+    //testMotor.set(speed*.90);
+    //testDiff.arcadeDrive(speed, 0);
   }
 
   @Override
@@ -175,5 +180,13 @@ public class Robot extends TimedRobot {
     thing[1] = avgRpm;
 
     return thing;
+  }
+
+  public void setRPM(){
+    //getVelocity returns motor speed in Rotations per minute
+    double avgRpm = (topShooterMotor.getEncoder().getVelocity() + bottomShooterMotor.getEncoder().getVelocity())/2;
+
+    //takes RPM to Rad/Sec by multiplying Pi rad/30sec = 2Pi rad/60sec
+    double shooterRadPerSec = avgRpm * (Math.PI/30);
   }
 }

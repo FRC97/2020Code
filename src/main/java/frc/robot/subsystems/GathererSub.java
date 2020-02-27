@@ -18,20 +18,12 @@ public class GathererSub extends SubsystemBase {
   /**
    * Creates a new Gatherer.
    */
-  public GathererSub() {
-  }
-
-  public void active(boolean toggle) {
+  public static void active(boolean toggle) {
       if (toggle){
-        gatherer.set(.75);
+        gatherer.set(1);
       }
       else{
         gatherer.set(0);
       }
-  }
-
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
   }
 }

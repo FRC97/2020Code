@@ -15,10 +15,10 @@ public class RobotMap {
     public static final int FR = 2;
     public static final int BR = 1;
     public static final int BL = 3;
-    public static final int TS = 5;
-    public static final int BS = 6;
-    public static final int Dc = 7;
-    public static final int Rc = 8;
+    public static final int TS = 7;
+    public static final int BS = 8;
+    public static final int Climb1 = 5;
+    public static final int Climb2 = 6;
     public static final int Gatherer = 9;
     public static final int Indexer = 10;
     public static final int test = 100;
