@@ -35,7 +35,7 @@ public class Robot extends TimedRobot {
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  private CANSparkMax gatherer = new CANSparkMax(RobotMap.Gatherer, MotorType.kBrushless);
+  //private CANSparkMax gatherer = new CANSparkMax(RobotMap.Gatherer, MotorType.kBrushless);
   private CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
   private CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
   private SpeedControllerGroup right;
@@ -46,7 +46,7 @@ public class Robot extends TimedRobot {
   private CameraServer cameraServer = CameraServer.getInstance();
   private int reverseDrive = 1;
   private boolean gathering = false;
-  private CANSparkMax testMotor = new CANSparkMax(100, MotorType.kBrushless);
+ // private CANSparkMax testMotor = new CANSparkMax(, MotorType.kBrushless);
   private DifferentialDrive testDiff;
   //public static final Ultrasonic.Unit kMillimeters;
   private Ultrasonic ultrasonic = new Ultrasonic(2, 3);
@@ -65,7 +65,7 @@ public class Robot extends TimedRobot {
     topShooterMotor.setInverted(true);
     Drive = new DifferentialDrive(left, right);
     Drive.setDeadband(0.05);
-    //testDiff = new DifferentialDrive(topShooterMotor, bottomShooterMotor);
+    testDiff = new DifferentialDrive(topShooterMotor, bottomShooterMotor);
     
     // init encocder  
 
@@ -84,13 +84,14 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(JoystickMap.Yval));
     SmartDashboard.putNumber("Joy Stick Slider", joy.getRawAxis(JoystickMap.slider));
     SmartDashboard.putNumber("Slider %-Value", sliderContrain());
-    SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
-    SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
-    SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
-    SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
-    SmartDashboard.putNumber("Gyro", gyro.getAngle());
-    SmartDashboard.putNumber("Ultrasonic", ultrasonic.getRangeMM()*0.001);
-    SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
+    // SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
+    // SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
+    // SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
+    // SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
+    SmartDashboard.putNumber("Shooter RPM", shooterRPM());
+    // SmartDashboard.putNumber("Gyro", gyro.getAngle());
+    // SmartDashboard.putNumber("Ultrasonic", ultrasonic.getRangeMM()*0.001);
+    // SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
@@ -111,12 +112,14 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
 
   }
+  boolean shooting = false;
   @Override
+
   public void teleopPeriodic() {
     double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
 
-    Drive.arcadeDrive(speed*sliderContrain(), turn*sliderContrain());
+    Drive.arcadeDrive(speed*0.5, turn*0.5);
 
     if (joy.getRawButtonPressed(JoystickMap.button9P)) {
       reverseDrive*= -1;
@@ -127,9 +130,20 @@ public class Robot extends TimedRobot {
       GathererSub.active(gathering);
     }
 
-    ShooterController.shoot(joy.getRawButtonPressed(JoystickMap.triggerP), ultrasonic.getRangeMM() * 0.001);
+    //double d = ultrasonic.getRangeMM() * 0.001
+
+    if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
+      shooting = !shooting;
+    }
+
+    if(shooting){
+      testDiff.arcadeDrive(-sliderContrain()/100, 0);
+    }
+    else{
+      testDiff.arcadeDrive(0, 0);
+    }
     //testMotor.set(speed*.90);
-    //testDiff.arcadeDrive(speed, 0);
+    
   }
 
   @Override
@@ -152,7 +166,7 @@ public class Robot extends TimedRobot {
   }
   private double sliderContrain(){
     double v = joy.getRawAxis(JoystickMap.slider) - 1; //-1 to 1 turns to -2 to 0
-    return Math.abs(v/2);
+    return Math.round((Math.abs(v/2)*100)); // reutrns 0 - 100 
   }
   
   private double[] speedAndRPM(){
@@ -182,11 +196,11 @@ public class Robot extends TimedRobot {
     return thing;
   }
 
-  public void setRPM(){
+  private double shooterRPM(){
     //getVelocity returns motor speed in Rotations per minute
     double avgRpm = (topShooterMotor.getEncoder().getVelocity() + bottomShooterMotor.getEncoder().getVelocity())/2;
 
     //takes RPM to Rad/Sec by multiplying Pi rad/30sec = 2Pi rad/60sec
-    double shooterRadPerSec = avgRpm * (Math.PI/30);
+    return avgRpm;
   }
 }

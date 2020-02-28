@@ -10,7 +10,6 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
@@ -28,7 +27,7 @@ public class ShooterController extends SubsystemBase {
    *
    * Height is constant: (2.49m - the height at the center of the shooter)
    * Distance is non-constant: UltraSonic return values in mm
-   * 
+   * 105 inches is ideal distance to the inner goal
    */
   private static double Calculate(Double distance) {
     double speed = 0.0; //Rad/s
@@ -52,7 +51,6 @@ public class ShooterController extends SubsystemBase {
    */
   public static void shoot(boolean pressed, double d){
     if (pressed){
-      
       topShooterMotor.set(Calculate(d));
       bottomShooterMotor.set(-Calculate(d));
     }
