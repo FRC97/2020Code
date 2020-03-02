@@ -53,6 +53,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("NEO FRONT LEFT", DriveTrain.FL.get());
     SmartDashboard.putNumber("NEO BACK LEFT", DriveTrain.BL.get());
     SmartDashboard.putBoolean("TEST MOTOR TOGGLE", testMode);
+    SmartDashboard.putNumber("Ultrasonic Distance from Wall", Autonomous.m_ultrasonic.getValue());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
