@@ -7,26 +7,32 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.Ultrasonic;
-import edu.wpi.first.wpilibj.Ultrasonic.Unit;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.RobotMap;
 import frc.robot.subsystems.DriveTrain;
+import frc.robot.subsystems.PID_Drive;
 
 public class Autonomous extends CommandBase {
   /**
    * Creates a new Autonomous.
    */
 
+  // distance in inches the robot wants to stay from an object
+  private static final double kHoldDistance = 109.0;
+
+  // factor to convert sensor values to a distance in inches
+  private static final double kValueToInches = 0.125;
+
+  // proportional speed constant
+  private static final int kUltrasonicPort = 0;
+
+  public final static AnalogInput m_ultrasonic = new AnalogInput(kUltrasonicPort);
+
   public DriveTrain m_DriveTrain = new DriveTrain();
   public Gyro gyro;
-  public Ultrasonic ultra1 = new Ultrasonic(RobotMap.pingChannel1, RobotMap.echoChannel1, Unit.kMillimeters);
-  public Ultrasonic ultra2 = new Ultrasonic(RobotMap.pingChannel2, RobotMap.echoChannel2, Unit.kMillimeters);
-  public double desiredvalue1 = 1;
-  public double desiredvalue2 = 2;
   public static boolean canshoot = false;
-  double initial;
+  double initial = 0;
 
   public Autonomous() {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -44,23 +50,43 @@ public class Autonomous extends CommandBase {
   @Override
   public void execute() {
 
-    double ul1 = ultra1.pidGet(); //forward
-    double ul2 = ultra2.pidGet(); //side
+    int count = 0;
+    double currentDistance = m_ultrasonic.getValue() * kValueToInches;
+    double zRotation = gyro.getAngle();
 
-    double zRotation = Math.atan((ul1 - desiredvalue1) / (ul2 - desiredvalue2)) / Math.PI;
+    PID_Drive.setpoint(initial);
 
-    if (ul1 < desiredvalue1 - 1 || ul1 > desiredvalue1 + 1 || 
-    ul2 < desiredvalue2 - 1 || ul2 > desiredvalue2 + 1) {
+    while (!PID_Drive.vision()) {
 
-      DriveTrain.m_drive.arcadeDrive(0.5, zRotation);
+      PID_Drive.executeTurn(0.2, 5);
+
+    }
+
+    if (currentDistance > kHoldDistance + 1 || currentDistance < kHoldDistance - 1) {
+
+      PID_Drive.drive(0.2, kHoldDistance, currentDistance);
+      
 
     } else {
 
-      if (gyro.getAngle() != initial) {
-        DriveTrain.m_drive.tankDrive(0.1, -0.1);
-      } else {
-        canshoot = true;
+      canshoot = true;
+      count = 1;
+
+    }
+
+    if (count == 1) {
+
+      while (zRotation < initial + 179 || zRotation > initial + 181) { 
+
+        PID_Drive.executeTurn(0.2, -5);
+
       }
+
+      // if (PID_Drive.vision()) {
+         //Go drive towards trench
+      //   PID_Drive.PID_DriveFirst(vision.get());
+
+      // }
 
     }
 
