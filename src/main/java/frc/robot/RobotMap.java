@@ -19,8 +19,8 @@ public class RobotMap {
     public static final int BS = 8;
     public static final int Climb1 = 5;
     public static final int Climb2 = 6;
-    public static final int Gatherer = 9;
-    public static final int Indexer = 10;
+    public static final int Gatherer = 10;
+    public static final int Indexer = 9;
     public static final int test = 100;
 
     //private static final int DriveController = 0;

@@ -13,6 +13,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -36,8 +37,9 @@ public class Robot extends TimedRobot {
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
   //private CANSparkMax gatherer = new CANSparkMax(RobotMap.Gatherer, MotorType.kBrushless);
-  private CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
-  private CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
+  private static final CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
+  private static final CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
+  private static final WPI_VictorSPX indexMotor =  new WPI_VictorSPX(RobotMap.Indexer);
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
   private DifferentialDrive Drive;
@@ -47,9 +49,8 @@ public class Robot extends TimedRobot {
   private int reverseDrive = 1;
   private boolean gathering = false;
  // private CANSparkMax testMotor = new CANSparkMax(, MotorType.kBrushless);
-  private DifferentialDrive testDiff;
   //public static final Ultrasonic.Unit kMillimeters;
-  private Ultrasonic ultrasonic = new Ultrasonic(2, 3);
+  private AnalogPotentiometer ultrasonic = new AnalogPotentiometer(0);
   
   /**
    * This function is run when the robot is first started up and should be used
@@ -62,17 +63,15 @@ public class Robot extends TimedRobot {
     left = new SpeedControllerGroup(FL, BL);
 
     // Differential Driv Deadband percentage
-    topShooterMotor.setInverted(true);
-    Drive = new DifferentialDrive(left, right);
-    Drive.setDeadband(0.05);
-    testDiff = new DifferentialDrive(topShooterMotor, bottomShooterMotor);
+    //Drive = new DifferentialDrive(left, right);
+    //Drive.setDeadband(0.05);
     
     // init encocder  
 
     //init Server Camera
-    cameraServer.startAutomaticCapture(0);
+    //cameraServer.startAutomaticCapture(0);
     //init Gyro
-    gyro = new AnalogGyro(0);
+    gyro = new AnalogGyro(1);
   }
 
   /**
@@ -90,8 +89,7 @@ public class Robot extends TimedRobot {
     // SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
     SmartDashboard.putNumber("Shooter RPM", shooterRPM());
     // SmartDashboard.putNumber("Gyro", gyro.getAngle());
-    // SmartDashboard.putNumber("Ultrasonic", ultrasonic.getRangeMM()*0.001);
-    // SmartDashboard.putNumberArray("Motor Shaft Speed and RPM", speedAndRPM());
+    SmartDashboard.putNumber("Ultrasonic", ultrasonic.get());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
     //SmartDashboard.putNumber("Motor Controller", TestController.get());
@@ -119,31 +117,32 @@ public class Robot extends TimedRobot {
     double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
 
-    Drive.arcadeDrive(speed*0.5, turn*0.5);
+    //Drive.arcadeDrive(speed*0, turn*0);
+    //double d = ultrasonic.getRangeMM() * 0.001
 
     if (joy.getRawButtonPressed(JoystickMap.button9P)) {
       reverseDrive*= -1;
     }
-
     if (joy.getRawButtonPressed(JoystickMap.button4P)) {
       gathering = !gathering;
       GathererSub.active(gathering);
     }
-
-    //double d = ultrasonic.getRangeMM() * 0.001
-
     if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
       shooting = !shooting;
     }
 
-    if(shooting){
-      testDiff.arcadeDrive(-sliderContrain()/100, 0);
+    if (shooting){
+      double shooterSpeed = ShooterController.Calculate(3);
+      System.out.println(shooterSpeed);
+      topShooterMotor.set(shooterSpeed);
+      bottomShooterMotor.set(shooterSpeed);
+      indexMotor.set(1);
     }
-    else{
-      testDiff.arcadeDrive(0, 0);
+    else {
+      topShooterMotor.set(0);
+      bottomShooterMotor.set(0);
+      indexMotor.set(0);
     }
-    //testMotor.set(speed*.90);
-    
   }
 
   @Override
@@ -168,39 +167,10 @@ public class Robot extends TimedRobot {
     double v = joy.getRawAxis(JoystickMap.slider) - 1; //-1 to 1 turns to -2 to 0
     return Math.round((Math.abs(v/2)*100)); // reutrns 0 - 100 
   }
-  
-  private double[] speedAndRPM(){
-    double[] thing = new double[2];
-
-    /**
-     * Averages all 4 motor RPM
-     */
-    double avgRpm = 
-    (
-    FR.getEncoder().getVelocity() + 
-    FL.getEncoder().getVelocity() + 
-    BR.getEncoder().getVelocity() + 
-    BL.getEncoder().getVelocity()
-    )/4;
-    /**
-     * RPM to m/s formula
-     * Shaft radius: 0.004m
-     * Link:
-     * https://www.humblix.com/i6dea32/how-to-convert-angular-velocity-expressed-in-revolutions-per-second-rpm-to-linear-speed-expressed-in-meters-per-second-m-s
-     */
-    double shaftSpeed = ((Math.PI*2 * 0.004)/60)*avgRpm;
-
-    thing[0] = shaftSpeed;
-    thing[1] = avgRpm;
-
-    return thing;
-  }
 
   private double shooterRPM(){
     //getVelocity returns motor speed in Rotations per minute
-    double avgRpm = (topShooterMotor.getEncoder().getVelocity() + bottomShooterMotor.getEncoder().getVelocity())/2;
-
-    //takes RPM to Rad/Sec by multiplying Pi rad/30sec = 2Pi rad/60sec
+    double avgRpm = topShooterMotor.getEncoder().getVelocity();
     return avgRpm;
   }
 }

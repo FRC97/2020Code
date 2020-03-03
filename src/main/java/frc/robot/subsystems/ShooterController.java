@@ -7,18 +7,18 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotMap;
 
 public class ShooterController extends SubsystemBase {
-  private static final CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
-  private static final CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
   // Will change upon futher shooterAngle and shooterHeight
-  private static final double shooterAngle = 55.0;
-  private static final double shooterHeight = 0.75;
+  private static final double shooterWheelRadius = 0.051;
+  private static final double shooterAngle = 65;
+  private static final double shooterHeight = 0.475;
   private static final double shooterAngleRads = Math.toRadians(shooterAngle);
 
   /**
@@ -26,37 +26,21 @@ public class ShooterController extends SubsystemBase {
    * wall
    *
    * Height is constant: (2.49m - the height at the center of the shooter)
-   * Distance is non-constant: UltraSonic return values in mm
-   * 105 inches is ideal distance to the inner goal
+   * Distance is non-constant: UltraSonic return values in mm, must be in meters to calculate
+   *
+   * 105 inches is ideal distance to the inner goal (2.667m)
    */
-  private static double Calculate(Double distance) {
-    double speed = 0.0; //Rad/s
-    double speedRPM = 0.0; //RPM
-    //Angle in Degrees for the Outer Port
+  public static double Calculate(double distance) {
+      double speed = 0.0; //Rad/s
+      double speedRPM = 0.0; //RPM
+      //Angle in Degrees for the Outer Port
 
-    double numerator = -4.905 * Math.pow(distance, 2);
-    double denominator = ((2.49 -shooterHeight) - (distance * Math.tan(shooterAngleRads))) * Math.pow(Math.cos(shooterAngleRads), 2);
+      double numerator = -(9.81/2) * Math.pow(distance, 2);
+      double denominator = ((2.49 - shooterHeight) - (distance * Math.tan(shooterAngleRads))) * Math.pow(Math.cos(shooterAngleRads), 2);
 
-    speed = (10 * Math.sqrt(numerator / denominator)); // Rads/Sec for the wheel
-    speedRPM = 3 * speed * (60/(2*Math.PI)); //RPM for the motor
-
-    return speedRPM;
-  }
-
-  /**
-   * This Method sets the top and bottom motors to their adjusted speeds
-   * From commands Shooter.java will send in to Params:
-   * @param topAmount
-   * @param bottomAmount
-   */
-  public static void shoot(boolean pressed, double d){
-    if (pressed){
-      topShooterMotor.set(Calculate(d));
-      bottomShooterMotor.set(-Calculate(d));
-    }
-    else {
-      topShooterMotor.set(0);
-      bottomShooterMotor.set(0);
-    }
+      speed = ((1/shooterWheelRadius) * Math.sqrt(numerator / denominator)); // Rads/Sec for the wheel
+      speedRPM = speed * (30/(Math.PI)); //RPM Conversion
+      //System.out.printf("Wheel Speed: %s RPM\nWheel Tangential Velocity is: %s m/s\nMotor Speed: %s RPM\nMotor Tangential Velocity: %s m/s\n", speedRPM, speed*shooterWheelRadius, speedRPM * 3, speed * 3 * shooterWheelRadius);
+      return speedRPM*3/8500;
   }
 }
