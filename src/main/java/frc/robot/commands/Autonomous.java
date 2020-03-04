@@ -20,6 +20,7 @@ public class Autonomous extends CommandBase {
 
   // distance in inches the robot wants to stay from an object
   private static final double kHoldDistance = 109.0;
+  private static final double kDistanceFromWallToTrench = 28.0;
 
   // factor to convert sensor values to a distance in inches
   private static final double kValueToInches = 0.125;
@@ -58,7 +59,7 @@ public class Autonomous extends CommandBase {
 
     while (!PID_Drive.vision()) {
 
-      PID_Drive.executeTurn(0.2, 5);
+      PID_Drive.turnInPlace(0.2);
 
     }
 
@@ -76,11 +77,19 @@ public class Autonomous extends CommandBase {
 
     if (count == 1) {
 
-      while (zRotation < initial + 179 || zRotation > initial + 181) { 
+      while (zRotation < initial - 89 || zRotation > initial - 91) { 
 
         PID_Drive.executeTurn(0.2, -5);
 
       }
+
+      if (currentDistance > kDistanceFromWallToTrench + 1 || currentDistance < kDistanceFromWallToTrench -1) {
+
+        PID_Drive.drive(0.5, kDistanceFromWallToTrench, currentDistance);
+
+      }
+
+      
 
       // if (PID_Drive.vision()) {
          //Go drive towards trench

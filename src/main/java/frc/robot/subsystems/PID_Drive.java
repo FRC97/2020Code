@@ -75,6 +75,11 @@ public class PID_Drive extends PIDSubsystem {
       DriveTrain.m_drive.arcadeDrive(speed, constrain(rcw * Math.PI / 180));
   }
 
+  public static void turnInPlace(double speed) {
+
+    DriveTrain.m_drive.tankDrive(speed, speed);
+
+  }
   public static boolean vision() {
 
     return false;
