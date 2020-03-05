@@ -7,11 +7,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterController extends SubsystemBase {
@@ -41,6 +36,6 @@ public class ShooterController extends SubsystemBase {
       speed = ((1/shooterWheelRadius) * Math.sqrt(numerator / denominator)); // Rads/Sec for the wheel
       speedRPM = speed * (30/(Math.PI)); //RPM Conversion
       //System.out.printf("Wheel Speed: %s RPM\nWheel Tangential Velocity is: %s m/s\nMotor Speed: %s RPM\nMotor Tangential Velocity: %s m/s\n", speedRPM, speed*shooterWheelRadius, speedRPM * 3, speed * 3 * shooterWheelRadius);
-      return speedRPM*3/8500;
+      return (speedRPM*3)/6000;
   }
 }

@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -17,7 +16,7 @@ import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.GathererSub;
@@ -36,10 +35,12 @@ public class Robot extends TimedRobot {
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  //private CANSparkMax gatherer = new CANSparkMax(RobotMap.Gatherer, MotorType.kBrushless);
   private static final CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
   private static final CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
   private static final WPI_VictorSPX indexMotor =  new WPI_VictorSPX(RobotMap.Indexer);
+  private CANSparkMax paracord = new CANSparkMax(RobotMap.Climb1, MotorType.kBrushed);
+  private CANSparkMax hookLift = new CANSparkMax(RobotMap.Climb2, MotorType.kBrushless);
+  private final Timer m_timer = new Timer();
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
   private DifferentialDrive Drive;
@@ -48,9 +49,13 @@ public class Robot extends TimedRobot {
   private CameraServer cameraServer = CameraServer.getInstance();
   private int reverseDrive = 1;
   private boolean gathering = false;
+  private boolean optimalDistanceMet = false;
+  private boolean turnDone = false;
+  private boolean distanceToTargetMet = false;
+  private double initialGyro = 0.0;
  // private CANSparkMax testMotor = new CANSparkMax(, MotorType.kBrushless);
   //public static final Ultrasonic.Unit kMillimeters;
-  private AnalogPotentiometer ultrasonic = new AnalogPotentiometer(0);
+  private AnalogPotentiometer ultrasonic = new AnalogPotentiometer(0, 500, -30);
   
   /**
    * This function is run when the robot is first started up and should be used
@@ -63,13 +68,13 @@ public class Robot extends TimedRobot {
     left = new SpeedControllerGroup(FL, BL);
 
     // Differential Driv Deadband percentage
-    //Drive = new DifferentialDrive(left, right);
-    //Drive.setDeadband(0.05);
+    Drive = new DifferentialDrive(left, right);
+    Drive.setDeadband(0.05);
     
     // init encocder  
 
     //init Server Camera
-    //cameraServer.startAutomaticCapture(0);
+    cameraServer.startAutomaticCapture(0);
     //init Gyro
     gyro = new AnalogGyro(1);
   }
@@ -88,7 +93,7 @@ public class Robot extends TimedRobot {
     // SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
     // SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
     SmartDashboard.putNumber("Shooter RPM", shooterRPM());
-    // SmartDashboard.putNumber("Gyro", gyro.getAngle());
+    SmartDashboard.putNumber("Gyro", gyro.getAngle());
     SmartDashboard.putNumber("Ultrasonic", ultrasonic.get());
     //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
     //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
@@ -98,17 +103,66 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     gyro.reset();
-    //0.02s loop
-    //gyro.setSensitivity();
+    initialGyro = gyro.getAngle();
+    m_timer.reset();
+    m_timer.start();
   }
 
   @Override
   public void autonomousPeriodic() {
+    double dist = ultrasonic.get();
+    double currentGyro = gyro.getAngle();
+    double time = 0.0;
+    System.out.println(dist);
+    if (!optimalDistanceMet) {
+      if (dist < 2.15) {
+        Drive.arcadeDrive(-0.4, 0);
+      } 
+      if (dist > 2.55) {
+        Drive.arcadeDrive(0.4, 0);
+      }
+      if (dist > 2.15 && dist < 2.55) {
+        optimalDistanceMet = true;
+      }
+    }
+    if (optimalDistanceMet) {
+      if (currentGyro < initialGyro - 92) {
+        Drive.tankDrive(-0.4, 0.4);
+      }
+      if (currentGyro > initialGyro - 88) {
+        Drive.tankDrive(0.4, -0.4);
+      }
+      if (currentGyro > initialGyro - 92 && currentGyro < initialGyro - 88) {
+        turnDone = true;
+      }
+    }
+    if (turnDone) {
+      if (dist < 2.8){
+        Drive.arcadeDrive(-0.4, 0);
+      }
+      if (dist > 3.2){
+        Drive.arcadeDrive(0.4, 0);
+      }
+      if (dist >= 2.8 && dist <= 3.2){
+        distanceToTargetMet = true;
+      }
+    }
+    if (distanceToTargetMet){
+      time = m_timer.get();
+      double shooterSpeed = ShooterController.Calculate(dist);
+      System.out.printf("The Shooter Speed: %s",shooterSpeed);
+      topShooterMotor.set(shooterSpeed);
+      bottomShooterMotor.set(shooterSpeed);
+      indexMotor.set(1);
+    }
+    if (m_timer.get() > time + 5 && time != 0.0) {
+      reverseDrive *= -1;
+    }
   }
 
   @Override
   public void teleopInit() {
-
+    topShooterMotor.getEncoder().setVelocityConversionFactor(Math.PI/30);
   }
   boolean shooting = false;
   @Override
@@ -117,8 +171,8 @@ public class Robot extends TimedRobot {
     double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
 
-    //Drive.arcadeDrive(speed*0, turn*0);
-    //double d = ultrasonic.getRangeMM() * 0.001
+    Drive.arcadeDrive(speed, turn*0.6);
+    double distance = ultrasonic.get();
 
     if (joy.getRawButtonPressed(JoystickMap.button9P)) {
       reverseDrive*= -1;
@@ -132,8 +186,8 @@ public class Robot extends TimedRobot {
     }
 
     if (shooting){
-      double shooterSpeed = ShooterController.Calculate(3);
-      System.out.println(shooterSpeed);
+      double shooterSpeed = ShooterController.Calculate(distance);
+      System.out.printf("The Shooter Speed: %s",shooterSpeed);
       topShooterMotor.set(shooterSpeed);
       bottomShooterMotor.set(shooterSpeed);
       indexMotor.set(1);
@@ -142,6 +196,17 @@ public class Robot extends TimedRobot {
       topShooterMotor.set(0);
       bottomShooterMotor.set(0);
       indexMotor.set(0);
+    }
+
+    if (joy.getRawButtonPressed(JoystickMap.button10P)) {
+      paracord.set(1);
+      hookLift.set(0.5);
+    }
+    if (joy.getRawButtonPressed(JoystickMap.button7P)) {
+      hookLift.set(-0.5);
+    }
+    if (joy.getRawButtonPressed(JoystickMap.button8P)) {
+      paracord.set(-0.5);
     }
   }
 
@@ -152,6 +217,7 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
   }
+
   private double contrain(double value){
     if (value > 1){
       return 1;
