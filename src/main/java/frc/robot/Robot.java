@@ -14,6 +14,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -38,8 +39,9 @@ public class Robot extends TimedRobot {
   private static final CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
   private static final CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
   private static final WPI_VictorSPX indexMotor =  new WPI_VictorSPX(RobotMap.Indexer);
-  private CANSparkMax paracord = new CANSparkMax(RobotMap.Climb1, MotorType.kBrushed);
-  private CANSparkMax hookLift = new CANSparkMax(RobotMap.Climb2, MotorType.kBrushless);
+  private CANSparkMax paraCord = new CANSparkMax(RobotMap.Cord, MotorType.kBrushless);
+  private CANSparkMax hookLift = new CANSparkMax(RobotMap.Hook, MotorType.kBrushless);
+  private Servo rampClean = new Servo(0);
   private final Timer m_timer = new Timer();
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
@@ -49,6 +51,7 @@ public class Robot extends TimedRobot {
   private CameraServer cameraServer = CameraServer.getInstance();
   private int reverseDrive = 1;
   private boolean gathering = false;
+  private boolean indexing = true;
   private boolean optimalDistanceMet = false;
   private boolean turnDone = false;
   private boolean distanceToTargetMet = false;
@@ -156,7 +159,6 @@ public class Robot extends TimedRobot {
       indexMotor.set(1);
     }
     if (m_timer.get() > time + 5 && time != 0.0) {
-      reverseDrive *= -1;
     }
   }
 
@@ -165,24 +167,47 @@ public class Robot extends TimedRobot {
     topShooterMotor.getEncoder().setVelocityConversionFactor(Math.PI/30);
   }
   boolean shooting = false;
-  @Override
 
+  @Override
   public void teleopPeriodic() {
     double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
 
-    Drive.arcadeDrive(speed, turn*0.6);
+    Drive.arcadeDrive(speed*sliderContrain()/100, turn*0.4);
     double distance = ultrasonic.get();
 
-    if (joy.getRawButtonPressed(JoystickMap.button9P)) {
+    if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
+      shooting = !shooting;
+    }
+    if (joy.getRawButtonPressed(JoystickMap.button2P)) {
       reverseDrive*= -1;
+    }
+    if (joy.getRawButtonPressed(JoystickMap.button3P)) {
+      indexing = !indexing;
     }
     if (joy.getRawButtonPressed(JoystickMap.button4P)) {
       gathering = !gathering;
       GathererSub.active(gathering);
     }
-    if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
-      shooting = !shooting;
+
+    if (joy.getRawButton(JoystickMap.button5P)) {
+      paraCord.set(1);
+    }
+    else if (joy.getRawButton(JoystickMap.button6P)) {
+      paraCord.set(-1);
+    }
+    else{
+      paraCord.set(0);
+    }
+
+    if (joy.getRawButton(JoystickMap.button7P)){
+      hookLift.set(0.7);
+    }
+    else if (joy.getRawButton(JoystickMap.button8P)) {
+      hookLift.set(-0.7);
+    }
+    else{
+      hookLift.set(0);
     }
 
     if (shooting){
@@ -198,15 +223,15 @@ public class Robot extends TimedRobot {
       indexMotor.set(0);
     }
 
-    if (joy.getRawButtonPressed(JoystickMap.button10P)) {
-      paracord.set(1);
+    if (joy.getRawButton(JoystickMap.button10P)) {
+      paraCord.set(1);
       hookLift.set(0.5);
     }
-    if (joy.getRawButtonPressed(JoystickMap.button7P)) {
+    if (joy.getRawButton(JoystickMap.button7P)) {
       hookLift.set(-0.5);
     }
-    if (joy.getRawButtonPressed(JoystickMap.button8P)) {
-      paracord.set(-0.5);
+    if (joy.getRawButton(JoystickMap.button8P)) {
+      paraCord.set(-0.5);
     }
   }
 
