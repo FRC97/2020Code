@@ -21,15 +21,15 @@ public class JoystickMap extends SubsystemBase {
   public static final int Zval = 2;
   public static final int slider = 3;
 
-  public static final int triggerP = 1;
-  public static final int button2P = 2;
-  public static final int button3P = 3;
-  public static final int button4P = 4;
-  public static final int button5P = 5;
-  public static final int button6P = 6;
-  public static final int button7P = 7;
-  public static final int button8P = 8;
-  public static final int button9P = 9;
+  public static final int triggerP = 1;//Shooter
+  public static final int button2P = 2;//Change Direction
+  public static final int button3P = 3;//Indexer
+  public static final int button4P = 4;//Gatherer
+  public static final int button5P = 5;//Wind Cord
+  public static final int button6P = 6;//Unwide Cord
+  public static final int button7P = 7;//Lift Parascope
+  public static final int button8P = 8;//Down Parascope
+  public static final int button9P = 9;//Drive to 3m (optimal shooting distance)
   public static final int button10P = 10;
 
 }

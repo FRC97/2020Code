@@ -215,11 +215,13 @@ public class Robot extends TimedRobot {
       System.out.printf("The Shooter Speed: %s",shooterSpeed);
       topShooterMotor.set(shooterSpeed);
       bottomShooterMotor.set(shooterSpeed);
+      rampClean.set(Math.abs(Math.cos(m_timer.get())));
       indexMotor.set(1);
     }
     else {
       topShooterMotor.set(0);
       bottomShooterMotor.set(0);
+      rampClean.stopMotor();
       indexMotor.set(0);
     }
 
