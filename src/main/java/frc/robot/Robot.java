@@ -117,7 +117,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousPeriodic() {
-    double dist = ultrasonic.get() * 0.125;
+    double dist = 5*(ultrasonic.get()/voltsPerMilimeter)*0.001;
     double currentGyro = gyro.getAngle();
     double time = 0.0;
     System.out.println(dist);
@@ -158,13 +158,15 @@ public class Robot extends TimedRobot {
       time = m_timer.get();
       double shooterSpeed = ShooterController.Calculate(3);
       System.out.printf("The Shooter Speed: %s",shooterSpeed);
-      //topShooterMotor.set(shooterSpeed);
-      //bottomShooterMotor.set(shooterSpeed);
-      //indexMotor.set(1);
+      topShooterMotor.set(shooterSpeed);
+      bottomShooterMotor.set(shooterSpeed);
+      rampClean.set(-Math.abs(Math.cos(m_timer.get())));
+      indexMotor.set(1);
     }
     if (m_timer.get() > time + 5) {
       topShooterMotor.set(0);
       bottomShooterMotor.set(0);
+      rampClean.stopMotor();
       indexMotor.set(0);
     }
   } 
@@ -181,7 +183,7 @@ public class Robot extends TimedRobot {
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
 
     Drive.arcadeDrive(speed*sliderContrain()/100, turn*0.4);
-    double distance = ultrasonic.get()*0.125;
+    double distance = 5*(ultrasonic.get()/voltsPerMilimeter)*0.001;
 
     if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
       shooting = !shooting;
@@ -191,9 +193,11 @@ public class Robot extends TimedRobot {
     }
     if (joy.getRawButton(JoystickMap.button3P)) {
       indexMotor.set(1);
+      rampClean.set(-Math.abs(Math.cos(m_timer.get())));
     }
     else{
       indexMotor.set(0);
+      rampClean.stopMotor();
     }
     if (joy.getRawButtonPressed(JoystickMap.button4P)) {
       gathering = !gathering;
