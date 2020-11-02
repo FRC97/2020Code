@@ -18,12 +18,22 @@ public class GathererSub extends SubsystemBase {
   /**
    * Creates a new Gatherer.
    */
-  public static void active(boolean toggle) {
+  public static void active(boolean toggle, String mode) {
+    if (mode.equals("For")){
+      if (toggle){
+          gatherer.set(-1);
+        }
+        else{
+          gatherer.set(0);
+        }
+      }
+    else if (mode.equals("rev")){
       if (toggle){
         gatherer.set(1);
       }
       else{
         gatherer.set(0);
       }
+    }
   }
 }

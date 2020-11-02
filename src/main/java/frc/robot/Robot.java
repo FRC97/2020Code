@@ -12,6 +12,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Servo;
@@ -59,8 +60,8 @@ public class Robot extends TimedRobot {
   private double initialGyro = 0.0;
  // private CANSparkMax testMotor = new CANSparkMax(, MotorType.kBrushless);
   //public static final Ultrasonic.Unit kMillimeters;. 
-  private AnalogPotentiometer ultrasonic = new AnalogPotentiometer(0, 1023, 0);
-  private final double voltsPerMilimeter = (5/1024);
+  private AnalogInput ultrasonic = new AnalogInput(0);
+  private long voltsPerMilimeter = (5/1024);
   
   /**
    * This function is run when the robot is first started up and should be used
@@ -93,86 +94,90 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     SmartDashboard.putNumber("Joy Stick X", joy.getRawAxis(JoystickMap.Xval));
     SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(JoystickMap.Yval));
-    SmartDashboard.putNumber("Joy Stick Slider", joy.getRawAxis(JoystickMap.slider));
     SmartDashboard.putNumber("Slider %-Value", sliderContrain());
-    // SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
-    // SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
-    // SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
-    // SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
+    SmartDashboard.putBoolean("Gathering", gathering);
+    SmartDashboard.putBoolean("Shooting", shooting);
     SmartDashboard.putNumber("Shooter RPM", shooterRPM());
     SmartDashboard.putNumber("Gyro", gyro.getAngle());
-    SmartDashboard.putNumber("Ultrasonic", (5*(ultrasonic.get()/voltsPerMilimeter))*0.001);
-    //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
-    //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
-    //SmartDashboard.putNumber("Motor Controller", TestController.get());
+    SmartDashboard.putNumber("Ultrasonic", (ultrasonic.getAverageVoltage()/512) * 2.54);
   }
   
   @Override
   public void autonomousInit() {
-    //gyro.reset();
-    //initialGyro = gyro.getAngle();
+    gyro.reset();
+    initialGyro = gyro.getAngle();
     m_timer.reset();
     m_timer.start();
   }
 
   @Override
   public void autonomousPeriodic() {
-    double dist = 5*(ultrasonic.get()/voltsPerMilimeter)*0.001;
     double currentGyro = gyro.getAngle();
-    double time = 0.0;
-    System.out.println(dist);
-    // if (!optimalDistanceMet) {
-    //   if (dist < 2.15) {
-    //     Drive.arcadeDrive(-0.4, 0);
-    //   } 
-    //   if (dist > 2.55) {
-    //     Drive.arcadeDrive(0.4, 0);
-    //   }
-    //   if (dist > 2.15 && dist < 2.55) {
-    //     optimalDistanceMet = true;
-    //   }
-    // }
-    // if (optimalDistanceMet) {
-    //   if (currentGyro < initialGyro - 92) {
-    //     Drive.tankDrive(-0.4, 0.4);
-    //   }
-    //   if (currentGyro > initialGyro - 88) {
-    //     Drive.tankDrive(0.4, -0.4);
-    //   }
-    //   if (currentGyro > (initialGyro - 95) && currentGyro < (initialGyro - 85)) {
-    //     turnDone = true;
-    //   }
-    // }
-    if (!turnDone) {
-      if (dist < 2.8){
-        Drive.arcadeDrive(-0.4, 0);
-      }
-      if (dist > 3.2){
-        Drive.arcadeDrive(0.4, 0);
-      }
-      if (dist >= 2.8 && dist <= 3.2){
-        distanceToTargetMet = true;
-      }
-    }
-    if (distanceToTargetMet){
-      time = m_timer.get();
+    double dist = 5*(ultrasonic.getValue()/voltsPerMilimeter)*0.001;
+
+    if (m_timer.get() < 2) {
+
+      Drive.arcadeDrive(0.4, 0);
+
+    } else if (m_timer.get() > 2.2 && m_timer.get() < 5) {
+
       double shooterSpeed = ShooterController.Calculate(3);
       System.out.printf("The Shooter Speed: %s",shooterSpeed);
       topShooterMotor.set(shooterSpeed);
       bottomShooterMotor.set(shooterSpeed);
-      rampClean.set(-Math.abs(Math.cos(m_timer.get())));
-      indexMotor.set(1);
-    }
-    if (m_timer.get() > time + 5) {
+
+      if (m_timer.get() > 3.3) {
+
+        rampClean.set(-Math.abs(Math.cos(m_timer.get())));
+        indexMotor.set(1);
+
+      }
+    } else if (!turnDone) {
+
+      if (currentGyro > initialGyro - 88) {
+        Drive.tankDrive(0.3, -0.3);
+      } else if (currentGyro < initialGyro - 92) {
+        Drive.tankDrive(-0.3, 0.3);
+      }
+      
+      if (currentGyro <= initialGyro - 88 && currentGyro >= initialGyro - 92) {
+        turnDone = true;
+      }
+
+    } else if (turnDone && !distanceToTargetMet) {
+
+      if (dist < 30) {
+        Drive.arcadeDrive(0.2, 0);
+      } else if (dist > 50) {
+        Drive.arcadeDrive(-0.2, 0);
+      } else {
+        distanceToTargetMet = true;
+      }
+
+    } 
+    
+    if (distanceToTargetMet) {
+
+      if (currentGyro > initialGyro + 2) {
+        Drive.tankDrive(0.3, -0.3);
+      } else if (currentGyro < initialGyro - 2) {
+        Drive.tankDrive(-0.3, 0.3);
+      }
+
+    } else {
+
+      Drive.arcadeDrive(0, 0);
       topShooterMotor.set(0);
       bottomShooterMotor.set(0);
-      rampClean.stopMotor();
+      rampClean.stopMotor();;
       indexMotor.set(0);
+
     }
   } 
 
   @Override
   public void teleopInit() {
+    reverseDrive *= -1;
     //topShooterMotor.getEncoder().setVelocityConversionFactor(Math.PI/30);
   }
   boolean shooting = false;
@@ -181,10 +186,14 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
     double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
+    double zTurn = contrain(joy.getRawAxis(JoystickMap.Zval)) * reverseDrive;
 
-    Drive.arcadeDrive(speed*sliderContrain()/100, turn*0.4);
-    double distance = 5*(ultrasonic.get()/voltsPerMilimeter)*0.001;
+    Drive.arcadeDrive((speed*sliderContrain()/100), turn*0.4);
+    double distance = 5*(ultrasonic.getValue());
 
+    if (joy.getRawAxis(JoystickMap.Zval) > 0 || joy.getRawAxis(JoystickMap.Zval) < 0) {
+      Drive.tankDrive(-zTurn * sliderContrain()/100, zTurn * sliderContrain()/100);
+    }
     if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
       shooting = !shooting;
     }
@@ -201,33 +210,34 @@ public class Robot extends TimedRobot {
     }
     if (joy.getRawButtonPressed(JoystickMap.button4P)) {
       gathering = !gathering;
-      GathererSub.active(gathering);
+      GathererSub.active(gathering, "For");
     }
 
     if (joy.getRawButton(JoystickMap.button5P)) {
-      paraCord.set(1);
-    }
-    else if (joy.getRawButton(JoystickMap.button6P)) {
-      paraCord.set(-1);
+      paraCord.set(1.0);
+    } else if (joy.getRawButton(JoystickMap.button6P)) {
+      paraCord.set(-1.0);
     }
     else{
       paraCord.set(0);
     }
 
     if (joy.getRawButton(JoystickMap.button7P)){
-      hookLift.set(0.2);
+      hookLift.set(0.4);
     }
     else if (joy.getRawButton(JoystickMap.button8P)) {
-      hookLift.set(-0.2);
-      paraCord.set(-1);
+      hookLift.set(-0.4);
 
     }
     else{
       hookLift.set(0);
     }
-
+    if (joy.getRawButton(JoystickMap.button10P)) {
+      gathering = !gathering;
+      GathererSub.active(gathering, "rev");
+    }
     if (shooting){
-      double shooterSpeed = ShooterController.Calculate(3);
+      double shooterSpeed = ShooterController.Calculate(4);
       System.out.printf("The Shooter Speed: %s\nDistance: %s",shooterSpeed, distance);
       topShooterMotor.set(shooterSpeed);
       bottomShooterMotor.set(shooterSpeed);
