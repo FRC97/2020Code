@@ -7,18 +7,24 @@
 
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import frc.robot.subsystems.JoystickController;
+import frc.robot.subsystems.GathererSub;
+import frc.robot.subsystems.ShooterController;
+import edu.wpi.first.cameraserver.CameraServer;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -28,138 +34,222 @@ import frc.robot.subsystems.JoystickController;
  * project.
  */
 public class Robot extends TimedRobot {
-  /**
-   * This function is run when the robot is first started up and should be used
-   * for any initialization code.
-   */
   private CANSparkMax FR = new CANSparkMax(RobotMap.FR, MotorType.kBrushless);
   private CANSparkMax FL = new CANSparkMax(RobotMap.FL, MotorType.kBrushless);
   private CANSparkMax BR = new CANSparkMax(RobotMap.BR, MotorType.kBrushless);
   private CANSparkMax BL = new CANSparkMax(RobotMap.BL, MotorType.kBrushless);
-  private JoystickController joystickController = new JoystickController();
-  
-  // private WPI_TalonSRX TopShooterMotor = new WPI_TalonSRX(RobotMap.TS);
-  // private WPI_TalonSRX BottomShooterMotor = new WPI_TalonSRX(RobotMap.BS);
-
-  // private WPI_VictorSPX DeployClimbMotor = new WPI_VictorSPX(RobotMap.Dc);
-  // private WPI_VictorSPX RetractClimbMotor = new WPI_VictorSPX(RobotMap.Rc);
-
-  private WPI_VictorSPX GathererMotor = new WPI_VictorSPX(RobotMap.Gatherer);
-  private WPI_VictorSPX IndexerMotor = new WPI_VictorSPX(RobotMap.Indexer);
-  
-  //private [[TYPE_MOTORCONTROLLER]] TestController = new [[TYPE_MOTORCONTROLLER]](RobotMap.Test);
-
-
-
+  private static final CANSparkMax topShooterMotor = new CANSparkMax(RobotMap.TS, MotorType.kBrushless);
+  private static final CANSparkMax bottomShooterMotor =  new CANSparkMax(RobotMap.BS, MotorType.kBrushless);
+  private static final WPI_VictorSPX indexMotor =  new WPI_VictorSPX(RobotMap.Indexer);
+  private CANSparkMax paraCord = new CANSparkMax(RobotMap.Cord, MotorType.kBrushed);
+  private CANSparkMax hookLift = new CANSparkMax(RobotMap.Hook, MotorType.kBrushed);
+  private Servo rampClean = new Servo(0);
+  private final Timer m_timer = new Timer();
   private SpeedControllerGroup right;
   private SpeedControllerGroup left;
-
   private DifferentialDrive Drive;
+  private Joystick joy = JoystickMap.joyStick;
+  private ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+  private CameraServer cameraServer1 = CameraServer.getInstance();
+  //private CameraServer cameraServer2 = CameraServer.getInstance();
+  private int reverseDrive = 1;
+  private boolean gathering = false;
+  private boolean optimalDistanceMet = false;
+  private boolean turnDone = false;
+  private boolean distanceToTargetMet = false;
+  private double initialGyro = 0.0;
+ // private CANSparkMax testMotor = new CANSparkMax(, MotorType.kBrushless);
+  //public static final Ultrasonic.Unit kMillimeters;. 
+  private AnalogInput ultrasonic = new AnalogInput(0);
+  private long voltsPerMilimeter = (5/1024);
   
-  private boolean testMode = false;
-
+  /**
+   * This function is run when the robot is first started up and should be used
+   * for any initialization code.
+   */
   @Override
   public void robotInit() {
-    // Inverted settings
-    // FR.setInverted(false);
-    // BR.setInverted(false);
-    // FL.setInverted(false);
-    // BL.setInverted(false);
-
+    // Speed Controller Group
     right = new SpeedControllerGroup(FR, BR);
     left = new SpeedControllerGroup(FL, BL);
 
     // Differential Driv Deadband percentage
     Drive = new DifferentialDrive(left, right);
     Drive.setDeadband(0.05);
-
+    
     // init encocder  
-    /*
-    RightMaster.setSensorPhase(true);
-    RightMaster.setSensorPhase(false);
 
-    RightMaster.setSelectedSensorPosition(0, 0, 10);
-    LeftMaster.setSelectedSensorPosition(0, 0, 10);
-    */
+    //init Server Camera
+    cameraServer1.startAutomaticCapture("Shooter Cam", 0);
+    //cameraServer2.startAutomaticCapture("Gatherer Cam", 1);
+    //init Gyro
+    gyro.calibrate();
+    
   }
 
+  /**
+   * Displays values into SmartDashboard
+   */
   @Override
   public void robotPeriodic() {
-    SmartDashboard.putNumber("Joy Stick X", joystickController.getX());
-    SmartDashboard.putNumber("Joy Stick Y", joystickController.getY());
-    SmartDashboard.putNumber("Joy Stick Slider", joystickController.getSlider());
+    SmartDashboard.putNumber("Joy Stick X", joy.getRawAxis(JoystickMap.Xval));
+    SmartDashboard.putNumber("Joy Stick Y", joy.getRawAxis(JoystickMap.Yval));
     SmartDashboard.putNumber("Slider %-Value", sliderContrain());
-    SmartDashboard.putNumber("NEO BACK RIGHT", BR.get());
-    SmartDashboard.putNumber("NEO FRONT RIGHT", FR.get());
-    SmartDashboard.putNumber("NEO FRONT LEFT", FL.get());
-    SmartDashboard.putNumber("NEO BACK LEFT", BL.get());
-    SmartDashboard.putBoolean("TEST MOTOR TOGGLE", testMode);
-    //SmartDashboard.putNumber("NEO Position", testMotor.getEncoder().getPosition());
-    //SmartDashboard.putNumber("NEO Velocity", testMotor.getEncoder().getVelocity());
-    //SmartDashboard.putNumber("Motor Controller", TestController.get());
+    SmartDashboard.putBoolean("Gathering", gathering);
+    SmartDashboard.putBoolean("Shooting", shooting);
+    SmartDashboard.putNumber("Shooter RPM", shooterRPM());
+    SmartDashboard.putNumber("Gyro", gyro.getAngle());
+    SmartDashboard.putNumber("Ultrasonic", (ultrasonic.getAverageVoltage()/512) * 2.54);
   }
   
   @Override
   public void autonomousInit() {
+    gyro.reset();
+    initialGyro = gyro.getAngle();
+    m_timer.reset();
+    m_timer.start();
   }
 
   @Override
   public void autonomousPeriodic() {
-  }
+    double currentGyro = gyro.getAngle();
+    double dist = 5*(ultrasonic.getValue()/voltsPerMilimeter)*0.001;
+
+    if (m_timer.get() < 2) {
+
+      Drive.arcadeDrive(0.4, 0);
+
+    } else if (m_timer.get() > 2.2 && m_timer.get() < 5) {
+
+      double shooterSpeed = ShooterController.Calculate(3);
+      System.out.printf("The Shooter Speed: %s",shooterSpeed);
+      topShooterMotor.set(shooterSpeed);
+      bottomShooterMotor.set(shooterSpeed);
+
+      if (m_timer.get() > 3.3) {
+
+        rampClean.set(-Math.abs(Math.cos(m_timer.get())));
+        indexMotor.set(1);
+
+      }
+    } else if (!turnDone) {
+
+      if (currentGyro > initialGyro - 88) {
+        Drive.tankDrive(0.3, -0.3);
+      } else if (currentGyro < initialGyro - 92) {
+        Drive.tankDrive(-0.3, 0.3);
+      }
+      
+      if (currentGyro <= initialGyro - 88 && currentGyro >= initialGyro - 92) {
+        turnDone = true;
+      }
+
+    } else if (turnDone && !distanceToTargetMet) {
+
+      if (dist < 30) {
+        Drive.arcadeDrive(0.2, 0);
+      } else if (dist > 50) {
+        Drive.arcadeDrive(-0.2, 0);
+      } else {
+        distanceToTargetMet = true;
+      }
+
+    } 
+    
+    if (distanceToTargetMet) {
+
+      if (currentGyro > initialGyro + 2) {
+        Drive.tankDrive(0.3, -0.3);
+      } else if (currentGyro < initialGyro - 2) {
+        Drive.tankDrive(-0.3, 0.3);
+      }
+
+    } else {
+
+      Drive.arcadeDrive(0, 0);
+      topShooterMotor.set(0);
+      bottomShooterMotor.set(0);
+      rampClean.stopMotor();;
+      indexMotor.set(0);
+
+    }
+  } 
 
   @Override
   public void teleopInit() {
+    reverseDrive *= -1;
+    //topShooterMotor.getEncoder().setVelocityConversionFactor(Math.PI/30);
   }
+  boolean shooting = false;
 
   @Override
   public void teleopPeriodic() {
-    double speed = -contrain(joystickController.getY());
-    double turn = contrain(joystickController.getX());
-    Drive.arcadeDrive(speed*sliderContrain(), turn);
+    double speed = -contrain(joy.getRawAxis(JoystickMap.Yval)) * reverseDrive;
+    double turn = contrain(joy.getRawAxis(JoystickMap.Xval)) * reverseDrive;
+    double zTurn = contrain(joy.getRawAxis(JoystickMap.Zval)) * reverseDrive;
 
-    if (joystickController.getB2()){ 
-      GathererMotor.set(.5);
+    Drive.arcadeDrive((speed*sliderContrain()/100), turn*0.4);
+    double distance = 5*(ultrasonic.getValue());
+
+    if (joy.getRawAxis(JoystickMap.Zval) > 0 || joy.getRawAxis(JoystickMap.Zval) < 0) {
+      Drive.tankDrive(-zTurn * sliderContrain()/100, zTurn * sliderContrain()/100);
+    }
+    if (joy.getRawButtonPressed(JoystickMap.triggerP)) {
+      shooting = !shooting;
+    }
+    if (joy.getRawButtonPressed(JoystickMap.button2P)) {
+      reverseDrive*= -1;
+    }
+    if (joy.getRawButton(JoystickMap.button3P)) {
+      indexMotor.set(1);
+      rampClean.set(-Math.abs(Math.cos(m_timer.get())));
     }
     else{
-      GathererMotor.set(0);
+      indexMotor.set(0);
+      rampClean.stopMotor();
     }
-    if (joystickController.getB4()){ 
-      IndexerMotor.set(-.5);
+    if (joy.getRawButtonPressed(JoystickMap.button4P)) {
+      gathering = !gathering;
+      GathererSub.active(gathering, "For");
+    }
+
+    if (joy.getRawButton(JoystickMap.button5P)) {
+      paraCord.set(1.0);
+    } else if (joy.getRawButton(JoystickMap.button6P)) {
+      paraCord.set(-1.0);
     }
     else{
-      IndexerMotor.set(0);
+      paraCord.set(0);
     }
-    
-    if (testMode){
-      if (joystickController.getB5()){
-        FR.set(0.5);
-        FL.set(0);
-        BR.set(0);
-        BL.set(0);
-      }
-      if (joystickController.getB6()){ 
-        FR.set(0);
-        FL.set(0.5);
-        BR.set(0);
-        BL.set(0);
-      }
-      if (joystickController.getB7()){ 
-        FR.set(0);
-        FL.set(0);
-        BR.set(0.5);
-        BL.set(0);
-      }
-      if (joystickController.getB8()){
-        FR.set(0);
-        FL.set(0);
-        BR.set(0);
-        BL.set(0.5);
-      }
+
+    if (joy.getRawButton(JoystickMap.button7P)){
+      hookLift.set(0.4);
     }
-    if (joystickController.getB9()) {
-      testMode = !testMode;
+    else if (joy.getRawButton(JoystickMap.button8P)) {
+      hookLift.set(-0.4);
+
     }
-    //testMotor.set(speed);
+    else{
+      hookLift.set(0);
+    }
+    if (joy.getRawButton(JoystickMap.button10P)) {
+      gathering = !gathering;
+      GathererSub.active(gathering, "rev");
+    }
+    if (shooting){
+      double shooterSpeed = ShooterController.Calculate(4);
+      System.out.printf("The Shooter Speed: %s\nDistance: %s",shooterSpeed, distance);
+      topShooterMotor.set(shooterSpeed);
+      bottomShooterMotor.set(shooterSpeed);
+      rampClean.set(-Math.abs(Math.cos(m_timer.get())));
+      indexMotor.set(1);
+    }
+    else {
+      topShooterMotor.set(0);
+      bottomShooterMotor.set(0);
+      rampClean.stopMotor();
+      indexMotor.set(0);
+    }
   }
 
   @Override
@@ -169,6 +259,7 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
   }
+
   private double contrain(double value){
     if (value > 1){
       return 1;
@@ -181,7 +272,13 @@ public class Robot extends TimedRobot {
     }
   }
   private double sliderContrain(){
-    double v = joystickController.getZ() - 1; //-1 to 1 turns to -2 to 0
-    return Math.abs(v/2);
+    double v = joy.getRawAxis(JoystickMap.slider) - 1; //-1 to 1 turns to -2 to 0
+    return Math.round((Math.abs(v/2)*100)); // reutrns 0 - 100 
+  }
+
+  private double shooterRPM(){
+    //getVelocity returns motor speed in Rotations per minute
+    double avgRpm = topShooterMotor.getEncoder().getVelocity();
+    return avgRpm;
   }
 }

@@ -11,18 +11,16 @@ package frc.robot;
  * Add your docs here.
  */
 public class RobotMap {
-    public static final int FL = 4;
-    public static final int FR = 2;
-    public static final int BR = 1;
-    public static final int BL = 3;
-    public static final int TS = 5;
-    public static final int BS = 6;
-    public static final int Dc = 7;
-    public static final int Rc = 8;
-    public static final int Gatherer = 9;
-    public static final int Indexer = 10;
-    public static final int test = 100;
+    public static final int BR = 1; //Spark Max 40A
+    public static final int FR = 2; //Spark Max 40A
+    public static final int BL = 3; //Spark Max 40A
+    public static final int FL = 4; //Spark Max 40A
+    public static final int Cord = 5; //Spark Max 40A
+    public static final int Hook = 6; //Spark Max 40A
+    public static final int TS = 7; //Spark Max 20A
+    public static final int BS = 8; //Spark Max 20A
+    public static final int Indexer = 9; //VictorSPX 20A
+    public static final int Gatherer = 10; //VictorSPX 20A
+    public static final int test = 100; //Arbitrary Controller
 
-    //private static final int DriveController = 0;
-    //private static final int m_stick = 0;
 }
